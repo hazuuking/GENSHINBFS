@@ -25,6 +25,12 @@ public class MachineTrigger : MonoBehaviour
         if (other.gameObject == gameManager.targetObject)
         {
             Debug.Log($"TargetObject entrou na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
+            
+            // Se for a segunda máquina, aciona a lógica de reação ótima.
+            if (!isFirstMachine && gameManager != null)
+            {
+                gameManager.TriggerOptimalReaction();
+            }
             // Aqui você pode adicionar lógica para habilitar/desabilitar botões, etc.,
             // dependendo de qual máquina o objeto alvo entrou.
         }
@@ -43,3 +49,4 @@ public class MachineTrigger : MonoBehaviour
         }
     }
 }
+

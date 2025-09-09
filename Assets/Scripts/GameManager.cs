@@ -26,7 +26,24 @@ public class GameManager : MonoBehaviour
     /// </summary>
     public AuraManager auraManager; 
 
-    // A lista de 'elementButtons' foi removida, pois os botões agora são 3D e interagem diretamente.
+    /// <summary>
+    /// Uma lista de configurações de efeito para cada reação.
+    /// Configurada no Inspector da Unity.
+    /// </summary>
+    [System.Serializable]
+    public class ReactionEffect
+    {
+        /// <summary>
+        /// O tipo de reação ao qual este efeito visual está associado.
+        /// </summary>
+        public ReactionType reactionType;
+        /// <summary>
+        /// O prefab do GameObject que contém o sistema de partículas ou outros componentes visuais
+        /// que representam o efeito desta reação.
+        /// </summary>
+        public GameObject effectPrefab; 
+    }
+    public List<ReactionEffect> reactionEffects; 
 
     /// <summary>
     /// Chamado no primeiro frame em que o script está ativo.
@@ -42,7 +59,7 @@ public class GameManager : MonoBehaviour
     }
 
     /// <summary>
-    /// Método chamado quando um botão de elemento (agora um botão 3D) é clicado.
+    /// Método chamado quando um botão de elemento (agora um botão 3D) é clicado na PRIMEIRA MÁQUINA.
     /// Este método é chamado pelo script ElementButton3D.
     /// </summary>
     /// <param name="elementIndex">O índice do elemento selecionado, correspondendo ao valor do enum ElementType.</param>
@@ -51,14 +68,13 @@ public class GameManager : MonoBehaviour
         // Converte o índice inteiro para o tipo ElementType correspondente.
         ElementType selectedElement = (ElementType)elementIndex;
 
-        // Verifica se o objeto alvo já possui um elemento aplicado.
+        // Esta função agora é estritamente para a primeira máquina.
+        // Se o objeto já tem um elemento, significa que ele está na segunda máquina ou em um estado inválido para esta função.
         if (currentObjectElement == ElementType.None)
         {
-            // Se não houver elemento, esta é a primeira máquina: aplica o elemento ao objeto.
             currentObjectElement = selectedElement;
             Debug.Log($"Objeto imbuído com: {currentObjectElement}");
             
-            // Atualiza a aura visual do objeto através do AuraManager.
             if (auraManager != null)
             {
                 auraManager.SetAura(currentObjectElement);
@@ -66,22 +82,66 @@ public class GameManager : MonoBehaviour
         }
         else
         {
-            // Se já houver um elemento, esta é a segunda máquina: tenta uma reação elemental.
-            // Usa o ReactionFinder para determinar o tipo de reação entre o elemento atual e o selecionado.
-            ReactionType reaction = ReactionFinder.FindBestReaction(currentObjectElement, selectedElement);
-            Debug.Log($"Reação entre {currentObjectElement} e {selectedElement}: {reaction}");
+            Debug.LogWarning("Objeto já possui um elemento. Esta função é apenas para a primeira máquina.");
+        }
+    }
+
+    /// <summary>
+    /// Este método é chamado quando o objeto alvo entra na área da SEGUNDA MÁQUINA.
+    /// Ele automaticamente encontra o melhor segundo elemento para reagir com o elemento atual do objeto
+    /// e aciona a reação correspondente.
+    /// </summary>
+    public void TriggerOptimalReaction()
+    {
+        if (currentObjectElement != ElementType.None)
+        {
+            ElementType bestIncomingElement = ElementType.None;
+            ReactionType bestReaction = ReactionType.None;
+            float maxEvaluation = -1.0f;
+
+            // Itera sobre todos os elementos possíveis (exceto None) para encontrar o melhor segundo elemento.
+            // Começa de 1 para pular ElementType.None.
+            for (int i = 1; i <= (int)ElementType.Geo; i++)
+            {
+                ElementType potentialIncomingElement = (ElementType)i;
+                ReactionType potentialReaction = ElementalReaction.GetReaction(currentObjectElement, potentialIncomingElement);
+                float currentEvaluation = ReactionEvaluator.EvaluateReaction(potentialReaction);
+
+                // Se a avaliação da reação potencial for maior que a máxima encontrada até agora,
+                // atualiza a melhor reação e o elemento correspondente.
+                if (currentEvaluation > maxEvaluation)
+                {
+                    maxEvaluation = currentEvaluation;
+                    bestReaction = potentialReaction;
+                    bestIncomingElement = potentialIncomingElement;
+                }
+            }
+
+            Debug.Log($"Objeto com {currentObjectElement}. Melhor elemento para reagir: {bestIncomingElement}. Reação: {bestReaction} (Avaliação: {maxEvaluation})");
             
-            // Após a reação, o elemento do objeto é resetado para 'None'.
+            // Instancia o efeito da melhor reação encontrada.
+            ReactionEffect effectToPlay = reactionEffects.Find(eff => eff.reactionType == bestReaction);
+            if (effectToPlay != null && effectToPlay.effectPrefab != null)
+            {
+                Instantiate(effectToPlay.effectPrefab, targetObject.transform.position, Quaternion.identity);
+                Debug.Log($"Efeito de {bestReaction} instanciado.");
+            }
+            else if (bestReaction != ReactionType.None)
+            {
+                Debug.LogWarning($"Prefab de efeito não encontrado para a reação: {bestReaction}");
+            }
+
+            // Resetar o elemento do objeto após a reação.
             currentObjectElement = ElementType.None;
             // Remove a aura visual do objeto.
             if (auraManager != null)
             {
                 auraManager.SetAura(ElementType.None);
             }
-
-            // TODO: Implementar efeitos visuais e sonoros específicos para cada tipo de reação.
-            // Isso pode envolver a instanciação de prefabs de partículas ou a reprodução de áudios.
-            // TODO: Exibir o resultado da reação em uma interface de usuário (UI) para o jogador.
+        }
+        else
+        {
+            Debug.Log("Objeto não possui elemento para reagir na segunda máquina. Certifique-se de que um elemento foi aplicado na primeira máquina.");
         }
     }
 
