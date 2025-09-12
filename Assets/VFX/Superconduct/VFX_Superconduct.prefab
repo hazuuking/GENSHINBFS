@@ -11,6 +11,7 @@ GameObject:
   - component: {fileID: 7706046198881335168}
   - component: {fileID: 835786311705656722}
   - component: {fileID: 632879346510788807}
+  - component: {fileID: -7687862362557486699}
   m_Layer: 0
   m_Name: VFX_Superconduct
   m_TagString: Untagged
@@ -4915,3 +4916,16 @@ ParticleSystemRenderer:
   m_MeshWeighting2: 1
   m_MeshWeighting3: 1
   m_MaskInteraction: 0
+--- !u!114 &-7687862362557486699
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6600697266517328216}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0bf96ed85a14f24385050c78efdee0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  effectDuration: 1

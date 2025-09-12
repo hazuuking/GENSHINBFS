@@ -4906,6 +4906,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 7910921704278382591}
+  - component: {fileID: 276979525579802912}
   m_Layer: 0
   m_Name: 'VFX_Overload '
   m_TagString: Untagged
@@ -4929,3 +4930,16 @@ Transform:
   - {fileID: 4336730658042535643}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &276979525579802912
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1061148877434272573}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d0bf96ed85a14f24385050c78efdee0b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  effectDuration: 1
