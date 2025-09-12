@@ -68,21 +68,14 @@ public class GameManager : MonoBehaviour
         // Converte o índice inteiro para o tipo ElementType correspondente.
         ElementType selectedElement = (ElementType)elementIndex;
 
-        // Esta função agora é estritamente para a primeira máquina.
-        // Se o objeto já tem um elemento, significa que ele está na segunda máquina ou em um estado inválido para esta função.
-        if (currentObjectElement == ElementType.None)
+        // A lógica foi atualizada: se o objeto já possui um elemento, ele será substituído pelo novo.
+        // Isso permite que o usuário troque o elemento na primeira máquina antes de ir para a segunda.
+        currentObjectElement = selectedElement;
+        Debug.Log($"Objeto agora está imbuído com: {currentObjectElement}");
+        
+        if (auraManager != null)
         {
-            currentObjectElement = selectedElement;
-            Debug.Log($"Objeto imbuído com: {currentObjectElement}");
-            
-            if (auraManager != null)
-            {
-                auraManager.SetAura(currentObjectElement);
-            }
-        }
-        else
-        {
-            Debug.LogWarning("Objeto já possui um elemento. Esta função é apenas para a primeira máquina.");
+            auraManager.SetAura(currentObjectElement);
         }
     }
 
