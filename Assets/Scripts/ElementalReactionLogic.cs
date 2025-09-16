@@ -3,103 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 
 /// <summary>
-/// Define os tipos de reações elementais que podem ocorrer no Genshin Impact.
-/// </summary>
-public enum ReactionType
-{
-    /// <summary>
-    /// Nenhuma reação ocorreu.
-    /// </summary>
-    None,
-    /// <summary>
-    /// Reação de Sobrecarga (Pyro + Electro).
-    /// </summary>
-    Overload,
-    /// <summary>
-    /// Reação de Estilhaçar (Cryo + Dano Físico).
-    /// </summary>
-    Shatter,
-    /// <summary>
-    /// Reação de Redemoinho (Anemo + Pyro/Hydro/Electro/Cryo).
-    /// </summary>
-    Swirl,
-    /// <summary>
-    /// Reação de Supercondutor (Cryo + Electro).
-    /// </summary>
-    Superconduct,
-    /// <summary>
-    /// Reação de Eletricamente Carregado (Hydro + Electro).
-    /// </summary>
-    ElectroCharged,
-    /// <summary>
-    /// Reação de Fusão (Pyro + Cryo ou Cryo + Pyro).
-    /// </summary>
-    Melt,
-    /// <summary>
-    /// Reação de Vaporização (Hydro + Pyro ou Pyro + Hydro).
-    /// </summary>
-    Vaporize,
-    /// <summary>
-    /// Reação de Congelar (Hydro + Cryo).
-    /// </summary>
-    Freeze,
-    /// <summary>
-    /// Reação de Cristalização (Geo + Pyro/Hydro/Electro/Cryo).
-    /// </summary>
-    Crystallize,
-    /// <summary>
-    /// Reação de Queimadura (Dendro + Pyro).
-    /// </summary>
-    Burning,
-    /// <summary>
-    /// Reação de Florescimento (Dendro + Hydro).
-    /// </summary>
-    Bloom,
-    /// <summary>
-    /// Reação de Aceleração (Dendro + Electro).
-    /// </summary>
-    Quicken,
-    /// <summary>
-    /// Reação de Intensificação (Quicken + Electro).
-    /// </summary>
-    Aggravate,
-    /// <summary>
-    /// Reação de Propagação (Quicken + Dendro).
-    /// </summary>
-    Spread
-}
-
-/// <summary>
 /// Gerencia as definições e a lógica para determinar as reações elementais.
 /// </summary>
-public class ElementalReaction
+public static class ElementalReactionLogic
 {
-    /// <summary>
-    /// O primeiro elemento envolvido na reação.
-    /// </summary>
-    public ElementType Element1 { get; private set; }
-    /// <summary>
-    /// O segundo elemento envolvido na reação.
-    /// </summary>
-    public ElementType Element2 { get; private set; }
-    /// <summary>
-    /// O tipo de reação resultante.
-    /// </summary>
-    public ReactionType Type { get; private set; }
-
-    /// <summary>
-    /// Construtor para criar uma nova instância de ElementalReaction.
-    /// </summary>
-    /// <param name="e1">O primeiro ElementType.</param>
-    /// <param name="e2">O segundo ElementType.</param>
-    /// <param name="type">O ReactionType resultante.</param>
-    public ElementalReaction(ElementType e1, ElementType e2, ReactionType type)
-    {
-        Element1 = e1;
-        Element2 = e2;
-        Type = type;
-    }
-
     /// <summary>
     /// Um dicionário estático que mapeia combinações de dois elementos para o tipo de reação resultante.
     /// As chaves são Tuples de ElementType, representando as combinações de elementos.
@@ -109,7 +16,7 @@ public class ElementalReaction
     /// <summary>
     /// Construtor estático que inicializa o dicionário AllReactions com todas as reações elementais básicas.
     /// </summary>
-    static ElementalReaction()
+    static ElementalReactionLogic()
     {
         AllReactions = new Dictionary<Tuple<ElementType, ElementType>, ReactionType>
         {
@@ -144,9 +51,20 @@ public class ElementalReaction
     /// </summary>
     /// <param name="existingElement">O ElementType que já está aplicado ao alvo.</param>
     /// <param name="incomingElement">O ElementType que está sendo aplicado ao alvo.</param>
+    /// <param name="currentStatus">O status elemental atual do alvo (ex: Quicken).</param>
     /// <returns>O ReactionType resultante da combinação dos dois elementos. Retorna None se nenhuma reação ocorrer.</returns>
-    public static ReactionType GetReaction(ElementType existingElement, ElementType incomingElement)
+    public static ReactionType GetReaction(ElementType existingElement, ElementType incomingElement, ElementType currentStatus)
     {
+        // Lógica para reações de Intensificação (Aggravate) e Propagação (Spread).
+        // Estas reações dependem de uma aura de Aceleração (Quicken) pré-existente.
+        if (currentStatus == ElementType.Quicken)
+        {
+            if (incomingElement == ElementType.Electro)
+                return ReactionType.Aggravate;
+            if (incomingElement == ElementType.Dendro)
+                return ReactionType.Spread;
+        }
+
         // Lógica para reações de Redemoinho (Swirl) - Anemo reage com Pyro, Hydro, Electro ou Cryo.
         if (incomingElement == ElementType.Anemo)
         {
@@ -161,23 +79,10 @@ public class ElementalReaction
         {
             if (existingElement == ElementType.Pyro || existingElement == ElementType.Hydro || 
                 existingElement == ElementType.Electro || existingElement == ElementType.Cryo ||
-                existingElement == ElementType.Dendro) // Geo também pode cristalizar com Dendro
+                existingElement == ElementType.Dendro)
             {
                 return ReactionType.Crystallize;
             }
-        }
-
-        // Lógica para reações de Intensificação (Aggravate) e Propagação (Spread).
-        // Estas reações dependem de uma aura de Aceleração (Quicken) pré-existente.
-        // Para simplificar neste modelo de reação direta, assumimos que Quicken é um estado.
-        // Um sistema mais complexo rastrearia auras ativas no alvo.
-        if (existingElement == ReactionType.Quicken.ToElementType() && incomingElement == ElementType.Electro)
-        {
-            return ReactionType.Aggravate;
-        }
-        if (existingElement == ReactionType.Quicken.ToElementType() && incomingElement == ElementType.Dendro)
-        {
-            return ReactionType.Spread;
         }
 
         // Tenta encontrar a reação na ordem direta (existente + entrante).
@@ -199,24 +104,4 @@ public class ElementalReaction
     }
 }
 
-/// <summary>
-/// Classe de extensão para converter um ReactionType em um ElementType.
-/// Esta é uma simplificação para a lógica de GetReaction e pode precisar de um sistema mais robusto de rastreamento de auras em um jogo completo.
-/// </summary>
-public static class ReactionTypeExtensions
-{
-    /// <summary>
-    /// Converte um ReactionType específico (como Quicken) em um ElementType para simular a presença de uma aura.
-    /// </summary>
-    /// <param name="reactionType">O ReactionType a ser convertido.</param>
-    /// <returns>O ElementType correspondente à aura, ou None se não houver correspondência direta.</returns>
-    public static ElementType ToElementType(this ReactionType reactionType)
-    {
-        switch (reactionType)
-        {
-            case ReactionType.Quicken: return ElementType.Dendro; // Placeholder para a aura de Aceleração
-            default: return ElementType.None;
-        }
-    }
-}
 

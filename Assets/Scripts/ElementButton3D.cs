@@ -13,26 +13,21 @@ public class ElementButton3D : MonoBehaviour
     public ElementType elementType; 
 
     /// <summary>
-    /// Referência ao GameManager na cena.
-    /// Deve ser atribuído no Inspector da Unity.
-    /// </summary>
-    public GameManager gameManager; 
-
-    /// <summary>
     /// Chamado quando o mouse é clicado sobre este collider.
     /// </summary>
     void OnMouseDown()
     {
-        if (gameManager != null)
+        if (GameManager.Instance != null)
         {
-            // Chama o método OnElementButtonClicked do GameManager, passando o índice do elemento.
-            gameManager.OnElementButtonClicked((int)elementType);
+            // Chama o método OnElementButtonClicked do GameManager, passando o ElementType.
+            GameManager.Instance.OnElementButtonClicked(elementType);
             Debug.Log($"Botão 3D de {elementType} clicado.");
         }
         else
         {
-            Debug.LogWarning("GameManager não atribuído ao ElementButton3D.");
+            Debug.LogWarning("GameManager.Instance não encontrado. Certifique-se de que o GameManager está na cena e configurado como Singleton.");
         }
     }
 }
+
 

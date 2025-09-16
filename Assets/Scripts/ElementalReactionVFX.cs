@@ -53,7 +53,17 @@ public class ElementalReactionVFX : MonoBehaviour
         yield return new WaitForSeconds(duration);
         // Para efeitos que serão reutilizados (pooling), desative o GameObject
         // Para efeitos que não serão reutilizados, destrua o GameObject
-        gameObject.SetActive(false); // Ou Destroy(gameObject);
+        // gameObject.SetActive(false); // Ou Destroy(gameObject);
+
+        // Se estiver usando ObjectPoolManager, retorne o objeto para o pool
+        if (ObjectPoolManager.Instance != null)
+        {
+            ObjectPoolManager.Instance.ReturnToPool(gameObject.name, gameObject);
+        }
+        else
+        {
+            gameObject.SetActive(false);
+        }
     }
 
     // Método para ser chamado quando a reação é ativada
@@ -68,5 +78,11 @@ public class ElementalReactionVFX : MonoBehaviour
     public void Deactivate()
     {
         gameObject.SetActive(false);
+        if (ObjectPoolManager.Instance != null)
+        {
+            ObjectPoolManager.Instance.ReturnToPool(gameObject.name, gameObject);
+        }
     }
 }
+
+

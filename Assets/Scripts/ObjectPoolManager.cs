@@ -32,12 +32,19 @@ public class ObjectPoolManager : MonoBehaviour
 
         foreach (Pool pool in pools)
         {
+            if (poolDictionary.ContainsKey(pool.tag))
+            {
+                Debug.LogWarning($"Uma Pool com a tag '{pool.tag}' já existe. Por favor, use tags únicas para cada pool. Esta pool será ignorada.");
+                continue; // Pula esta pool duplicada
+            }
+
             Queue<GameObject> objectPool = new Queue<GameObject>();
 
             for (int i = 0; i < pool.size; i++)
             {
                 GameObject obj = Instantiate(pool.prefab);
                 obj.SetActive(false);
+                obj.transform.SetParent(this.transform); // Opcional: manter objetos instanciados como filhos do ObjectPoolManager
                 objectPool.Enqueue(obj);
             }
             poolDictionary.Add(pool.tag, objectPool);
@@ -52,28 +59,52 @@ public class ObjectPoolManager : MonoBehaviour
             return null;
         }
 
+        if (poolDictionary[tag].Count == 0)
+        {
+            Debug.LogWarning($"Pool \'{tag}\' está vazia. Instanciando novo objeto. Considere aumentar o tamanho do pool.");
+            // Opcional: instanciar um novo objeto se o pool estiver vazio
+            Pool targetPool = pools.Find(p => p.tag == tag);
+            if (targetPool != null)
+            {
+                GameObject newObj = Instantiate(targetPool.prefab);
+                newObj.transform.SetParent(this.transform);
+                newObj.transform.position = position;
+                newObj.transform.rotation = rotation;
+                newObj.SetActive(true);
+                return newObj;
+            }
+            return null;
+        }
+
         GameObject objectToSpawn = poolDictionary[tag].Dequeue();
 
-        objectToSpawn.SetActive(true);
         objectToSpawn.transform.position = position;
         objectToSpawn.transform.rotation = rotation;
+        objectToSpawn.SetActive(true);
 
-        // Re-enfileira o objeto para reutilização futura
-        poolDictionary[tag].Enqueue(objectToSpawn);
+        // Ativa o script ElementalReactionVFX se presente
+        ElementalReactionVFX vfxController = objectToSpawn.GetComponent<ElementalReactionVFX>();
+        if (vfxController != null)
+        {
+            vfxController.Activate(position, rotation); // Garante que o VFX seja ativado corretamente
+        }
 
         return objectToSpawn;
     }
 
-    // Método para retornar um objeto ao pool (chamado pelo ElementalReactionVFX)
-    public void ReturnToPool(GameObject obj, string tag)
+    public void ReturnToPool(string tag, GameObject objectToReturn)
     {
         if (!poolDictionary.ContainsKey(tag))
         {
-            Debug.LogWarning($"Pool com a tag {tag} não existe.");
+            Debug.LogWarning($"Pool com a tag {tag} não existe. Destruindo objeto {objectToReturn.name}.");
+            Destroy(objectToReturn);
             return;
         }
-        obj.SetActive(false);
-        // O objeto já foi re-enfileirado no SpawnFromPool, então não precisamos fazer isso aqui novamente
-        // Apenas desativamos o objeto.
+
+        objectToReturn.SetActive(false);
+        objectToReturn.transform.SetParent(this.transform); // Garante que o objeto retorne como filho do pool manager
+        poolDictionary[tag].Enqueue(objectToReturn);
     }
 }
+
+

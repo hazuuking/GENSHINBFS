@@ -1,140 +1,135 @@
 using UnityEngine;
 using System.Collections.Generic;
+using System.Linq;
 
 /// <summary>
-/// Gerencia a lógica principal do jogo, incluindo a aplicação de elementos ao objeto alvo
-/// e o cálculo das reações elementais.
+/// Gerencia a lógica principal do jogo, incluindo a aplicação de elementos ao objeto alvo,
+/// o cálculo das reações elementais e a orquestração entre os diferentes sistemas.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    /// <summary>
-    /// O objeto 3D que receberá os elementos e exibirá as auras.
-    /// Deve ser atribuído no Inspector da Unity.
-    /// </summary>
-    public GameObject targetObject; 
+    public static GameManager Instance { get; private set; }
 
-    /// <summary>
-    /// O ElementType atualmente aplicado ao objeto alvo.
-    /// 'None' indica que nenhum elemento está aplicado.
-    /// </summary>
-    public ElementType currentObjectElement = ElementType.None; 
+    [Header("Configuração do Alvo")]
+    [Tooltip("O objeto 3D que receberá os elementos e exibirá as auras. Deve ter um ElementalAuraManager e SlimeModelManager.")]
+    public GameObject targetSlimeObject; 
 
-    /// <summary>
-    /// Referência ao componente AuraManager no objeto alvo.
-    /// Usado para controlar os efeitos visuais da aura elemental.
-    /// Deve ser atribuído no Inspector da Unity.
-    /// </summary>
-    public AuraManager auraManager; 
+    private ElementalAuraManager targetAuraManager;
+    private SlimeModelManager targetSlimeModelManager;
 
-    /// <summary>
-    /// Uma lista de configurações de efeito para cada reação.
-    /// Configurada no Inspector da Unity.
-    /// </summary>
-    [System.Serializable]
-    public class ReactionEffect
+    void Awake()
     {
-        /// <summary>
-        /// O tipo de reação ao qual este efeito visual está associado.
-        /// </summary>
-        public ReactionType reactionType;
-        /// <summary>
-        /// O prefab do GameObject que contém o sistema de partículas ou outros componentes visuais
-        /// que representam o efeito desta reação.
-        /// </summary>
-        public GameObject effectPrefab; 
+        if (Instance == null)
+        {
+            Instance = this;
+        }
+        else
+        {
+            Destroy(gameObject);
+            return;
+        }
     }
-    public List<ReactionEffect> reactionEffects; 
 
-    /// <summary>
-    /// Chamado no primeiro frame em que o script está ativo.
-    /// Inicializa o objeto alvo sem nenhuma aura elemental.
-    /// </summary>
     void Start()
     {
-        // Garante que o AuraManager existe antes de tentar usá-lo.
-        if (auraManager != null)
+        if (targetSlimeObject != null)
         {
-            auraManager.SetAura(ElementType.None); // Remove qualquer aura inicial.
+            targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
+            targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+
+            if (targetAuraManager == null)
+            {
+                Debug.LogError("Target Slime Object não possui um ElementalAuraManager.");
+            }
+            if (targetSlimeModelManager == null)
+            {
+                Debug.LogError("Target Slime Object não possui um SlimeModelManager.");
+            }
+        }
+        else
+        {
+            Debug.LogError("Target Slime Object não atribuído no GameManager.");
         }
     }
 
     /// <summary>
-    /// Método chamado quando um botão de elemento (agora um botão 3D) é clicado na PRIMEIRA MÁQUINA.
-    /// Este método é chamado pelo script ElementButton3D.
+    /// Método chamado quando um botão de elemento é clicado (e.g., na primeira máquina).
+    /// Aplica o elemento selecionado ao slime alvo.
     /// </summary>
-    /// <param name="elementIndex">O índice do elemento selecionado, correspondendo ao valor do enum ElementType.</param>
-    public void OnElementButtonClicked(int elementIndex)
+    /// <param name="selectedElement">O ElementType selecionado pelo botão.</param>
+    public void OnElementButtonClicked(ElementType selectedElement)
     {
-        // Converte o índice inteiro para o tipo ElementType correspondente.
-        ElementType selectedElement = (ElementType)elementIndex;
-
-        // A lógica foi atualizada: se o objeto já possui um elemento, ele será substituído pelo novo.
-        // Isso permite que o usuário troque o elemento na primeira máquina antes de ir para a segunda.
-        currentObjectElement = selectedElement;
-        Debug.Log($"Objeto agora está imbuído com: {currentObjectElement}");
-        
-        if (auraManager != null)
+        if (targetAuraManager != null)
         {
-            auraManager.SetAura(currentObjectElement);
+            targetAuraManager.ApplyElement(selectedElement);
+            Debug.Log($"Elemento {selectedElement} aplicado ao slime.");
+        }
+        else
+        {
+            Debug.LogWarning("ElementalAuraManager do alvo não encontrado para aplicar elemento.");
         }
     }
 
     /// <summary>
     /// Este método é chamado quando o objeto alvo entra na área da SEGUNDA MÁQUINA.
-    /// Ele automaticamente encontra o melhor segundo elemento para reagir com o elemento atual do objeto
-    /// e aciona a reação correspondente.
+    /// Ele determina o elemento que melhor reage com a aura atual do slime e o aplica.
     /// </summary>
-    public void TriggerOptimalReaction()
+    public void TriggerReactionMachine()
     {
-        if (currentObjectElement != ElementType.None)
+        if (targetAuraManager == null)
         {
-            ElementType bestIncomingElement = ElementType.None;
-            ReactionType bestReaction = ReactionType.None;
-            float maxEvaluation = -1.0f;
+            Debug.LogWarning("ElementalAuraManager do alvo não encontrado para trigger de reação.");
+            return;
+        }
 
-            // Itera sobre todos os elementos possíveis (exceto None) para encontrar o melhor segundo elemento.
-            // Começa de 1 para pular ElementType.None.
-            for (int i = 1; i <= (int)ElementType.Geo; i++)
-            {
-                ElementType potentialIncomingElement = (ElementType)i;
-                ReactionType potentialReaction = ElementalReaction.GetReaction(currentObjectElement, potentialIncomingElement);
-                float currentEvaluation = ReactionEvaluator.EvaluateReaction(potentialReaction);
+        ElementType currentAura = targetAuraManager.currentAura;
+        ElementType currentStatus = targetAuraManager.currentStatus;
 
-                // Se a avaliação da reação potencial for maior que a máxima encontrada até agora,
-                // atualiza a melhor reação e o elemento correspondente.
-                if (currentEvaluation > maxEvaluation)
-                {
-                    maxEvaluation = currentEvaluation;
-                    bestReaction = potentialReaction;
-                    bestIncomingElement = potentialIncomingElement;
-                }
-            }
+        // Se não há aura ou status, não há o que reagir, então não faz nada ou aplica um elemento padrão
+        if (currentAura == ElementType.None && currentStatus == ElementType.None)
+        {
+            Debug.Log("Slime sem aura ou status. Nenhuma reação pode ser formada na segunda máquina.");
+            // Opcional: Aplicar um elemento padrão aqui se desejar que a máquina sempre faça algo
+            // targetAuraManager.ApplyElement(ElementType.Pyro); 
+            return;
+        }
 
-            Debug.Log($"Objeto com {currentObjectElement}. Melhor elemento para reagir: {bestIncomingElement}. Reação: {bestReaction} (Avaliação: {maxEvaluation})");
+        ElementType bestReactingElement = ElementType.None;
+        ReactionType bestReactionType = ReactionType.None;
+
+        // Itera sobre todos os elementos base para encontrar o que gera a melhor reação
+        // Excluímos ElementType.None, Quicken, Burning, Bloom, Aggravate, Spread pois não são elementos 'incoming'
+        ElementType[] possibleIncomingElements = new ElementType[]
+        {
+            ElementType.Pyro, ElementType.Hydro, ElementType.Electro, ElementType.Cryo, ElementType.Anemo, ElementType.Geo, ElementType.Dendro
+        };
+
+        foreach (ElementType potentialElement in possibleIncomingElements)
+        {
+            ReactionType reaction = ElementalReactionLogic.GetReaction(currentAura, potentialElement, currentStatus);
             
-            // Instancia o efeito da melhor reação encontrada.
-            ReactionEffect effectToPlay = reactionEffects.Find(eff => eff.reactionType == bestReaction);
-            if (effectToPlay != null && effectToPlay.effectPrefab != null)
+            // Prioriza reações que não sejam 'None'
+            if (reaction != ReactionType.None)
             {
-                Instantiate(effectToPlay.effectPrefab, targetObject.transform.position, Quaternion.identity);
-                Debug.Log($"Efeito de {bestReaction} instanciado.");
+                // Lógica simples: qualquer reação é melhor que nenhuma. 
+                // Para uma lógica mais complexa (ex: priorizar dano, CC, etc.),
+                // você precisaria de um sistema de pontuação para ReactionType.
+                bestReactingElement = potentialElement;
+                bestReactionType = reaction;
+                break; // Encontrou uma reação, pode parar aqui. Ou continuar para encontrar a 'melhor' de acordo com sua regra.
             }
-            else if (bestReaction != ReactionType.None)
-            {
-                Debug.LogWarning($"Prefab de efeito não encontrado para a reação: {bestReaction}");
-            }
+        }
 
-            // Resetar o elemento do objeto após a reação.
-            currentObjectElement = ElementType.None;
-            // Remove a aura visual do objeto.
-            if (auraManager != null)
-            {
-                auraManager.SetAura(ElementType.None);
-            }
+        if (bestReactingElement != ElementType.None)
+        {
+            Debug.Log($"Slime com aura {currentAura} e status {currentStatus}. Segunda máquina aplicando {bestReactingElement} para causar {bestReactionType}.");
+            targetAuraManager.ApplyElement(bestReactingElement);
         }
         else
         {
-            Debug.Log("Objeto não possui elemento para reagir na segunda máquina. Certifique-se de que um elemento foi aplicado na primeira máquina.");
+            Debug.Log("Nenhum elemento encontrou uma reação com a aura/status atual do slime na segunda máquina.");
+            // Opcional: Aplicar um elemento padrão ou limpar a aura se nenhuma reação for possível
+            // targetAuraManager.ApplyElement(ElementType.Pyro); 
         }
     }
 
@@ -142,15 +137,14 @@ public class GameManager : MonoBehaviour
     /// Reseta o estado elemental do objeto alvo para 'None' e remove qualquer aura visual.
     /// Este método é útil para testes ou para reiniciar o ciclo de aplicação de elementos.
     /// </summary>
-    public void ResetObject()
+    public void ResetTargetSlime()
     {
-        currentObjectElement = ElementType.None;
-        // Garante que o AuraManager existe antes de tentar usá-lo.
-        if (auraManager != null)
+        if (targetAuraManager != null)
         {
-            auraManager.SetAura(ElementType.None);
+            targetAuraManager.ClearAuras();
+            Debug.Log("Slime alvo resetado.");
         }
-        Debug.Log("Objeto resetado.");
     }
 }
+
 

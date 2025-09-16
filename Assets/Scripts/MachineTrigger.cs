@@ -6,11 +6,6 @@ using UnityEngine;
 public class MachineTrigger : MonoBehaviour
 {
     /// <summary>
-    /// Referência ao GameManager para interagir com a lógica do jogo.
-    /// Deve ser atribuído no Inspector da Unity.
-    /// </summary>
-    public GameManager gameManager; 
-    /// <summary>
     /// Indica se esta é a primeira máquina (true) ou a segunda (false).
     /// </summary>
     public bool isFirstMachine = true; 
@@ -21,18 +16,18 @@ public class MachineTrigger : MonoBehaviour
     /// <param name="other">O Collider que entrou no trigger.</param>
     void OnTriggerEnter(Collider other)
     {
-        // Verifica se o objeto que entrou no trigger é o objeto alvo.
-        if (other.gameObject == gameManager.targetObject)
+        // Verifica se o objeto que entrou no trigger é o slime alvo do GameManager
+        if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject)
         {
             Debug.Log($"TargetObject entrou na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
             
-            // Se for a segunda máquina, aciona a lógica de reação ótima.
-            if (!isFirstMachine && gameManager != null)
+            if (!isFirstMachine)
             {
-                gameManager.TriggerOptimalReaction();
+                // Se for a segunda máquina, aciona a lógica de reação
+                // O GameManager agora determinará o melhor elemento para reagir
+                GameManager.Instance.TriggerReactionMachine();
             }
-            // Aqui você pode adicionar lógica para habilitar/desabilitar botões, etc.,
-            // dependendo de qual máquina o objeto alvo entrou.
+            // Lógica para a primeira máquina (seleção de elemento) é tratada pelos ElementButton3D
         }
     }
 
@@ -42,11 +37,17 @@ public class MachineTrigger : MonoBehaviour
     /// <param name="other">O Collider que saiu do trigger.</param>
     void OnTriggerExit(Collider other)
     {
-        // Verifica se o objeto que saiu do trigger é o objeto alvo.
-        if (other.gameObject == gameManager.targetObject)
+        // Verifica se o objeto que saiu do trigger é o slime alvo do GameManager
+        if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject)
         {
             Debug.Log($"TargetObject saiu da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
+            // Opcional: Lógica para resetar o slime ou prepará-lo para a próxima fase
+            if (!isFirstMachine)
+            {
+                GameManager.Instance.ResetTargetSlime();
+            }
         }
     }
 }
+
 

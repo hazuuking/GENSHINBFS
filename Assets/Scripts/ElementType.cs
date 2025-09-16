@@ -35,6 +35,20 @@ public enum ElementType
     /// <summary>
     /// Elemento Geo (Terra).
     /// </summary>
-    Geo = 7
+    Geo = 7,
+    /// <summary>
+    /// Representa o estado Quicken, que é um status elemental e não um elemento base. 
+    /// Usado para lógica de reações como Aggravate e Spread.
+    /// </summary>
+    Quicken = 8,
+    /// <summary>
+    /// Representa o estado Burning, um status elemental de dano contínuo.
+    /// </summary>
+    Burning = 9,
+    /// <summary>
+    /// Representa o estado Bloom, que gera Dendro Cores.
+    /// </summary>
+    Bloom = 10
 }
+
 
