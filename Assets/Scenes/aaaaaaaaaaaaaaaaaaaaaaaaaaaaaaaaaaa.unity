@@ -190,7 +190,7 @@ Rigidbody:
   m_IsKinematic: 0
   m_Interpolate: 0
   m_Constraints: 0
-  m_CollisionDetection: 0
+  m_CollisionDetection: 2
 --- !u!114 &362178542
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -256,7 +256,7 @@ Transform:
   m_GameObject: {fileID: 362178539}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -5.64, y: 1.74, z: 7.08}
+  m_LocalPosition: {x: -2.97, y: 1.74, z: 7.08}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -376,7 +376,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstMachine: 1
-  machineElement: 0
 --- !u!65 &756852648
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -444,7 +443,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   isFirstMachine: 0
-  machineElement: 0
 --- !u!65 &858715608
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -624,7 +622,7 @@ Transform:
   m_GameObject: {fileID: 1398460876}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -1.18, y: 3.22, z: 0.33}
+  m_LocalPosition: {x: -1.18, y: 3.22, z: -6.83}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
