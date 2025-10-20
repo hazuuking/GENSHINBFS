@@ -98,6 +98,15 @@ public class SlimeSpawner : MonoBehaviour
             rb = spawnedSlime.AddComponent<Rigidbody>();
         }
         
+        // Configurações críticas para melhorar a detecção de colisão
+        rb.isKinematic = false;
+        rb.useGravity = true;
+        rb.drag = 3.0f; // Aumentado para reduzir a velocidade
+        rb.angularDrag = 2.0f; // Aumentado para estabilidade
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
+        rb.interpolation = RigidbodyInterpolation.Interpolate;
+        rb.sleepThreshold = 0.0f; // Nunca dorme
+        
         // Configure Rigidbody properties
         rb.mass = slimeMass;
         rb.drag = 1.5f; // Aumentado para reduzir a velocidade
@@ -115,10 +124,16 @@ public class SlimeSpawner : MonoBehaviour
             sphereCollider = spawnedSlime.AddComponent<SphereCollider>();
         }
         
-        // Configure SphereCollider
+        // Configure SphereCollider - IMPORTANTE: NÃO é trigger
         sphereCollider.radius = colliderRadius;
         sphereCollider.material = slimePhysicMaterial;
-        sphereCollider.isTrigger = false;
+        sphereCollider.isTrigger = false; // Garante que não é trigger para colisão física
+        
+        // Adiciona BoxCollider para melhorar a detecção
+        BoxCollider boxCollider = spawnedSlime.AddComponent<BoxCollider>();
+        boxCollider.size = new Vector3(colliderRadius * 2, colliderRadius * 2, colliderRadius * 2);
+        boxCollider.isTrigger = false;
+        boxCollider.material = slimePhysicMaterial;
         
         // Ensure the slime is on the default layer for proper collision detection
         spawnedSlime.layer = LayerMask.NameToLayer("Default");

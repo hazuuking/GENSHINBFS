@@ -37,12 +37,18 @@ public class MachineTrigger : MonoBehaviour
             boxCollider = gameObject.AddComponent<BoxCollider>();
         }
         
-        // Configura o collider como trigger e com tamanho adequado
+        // Configura o collider como trigger e com tamanho MUITO maior
         boxCollider.isTrigger = true;
-        boxCollider.size = colliderSize;
+        boxCollider.size = new Vector3(10, 10, 10); // Tamanho muito maior para garantir detecção
         boxCollider.center = Vector3.zero;
         
-        Debug.Log($"Configurado collider da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina com tamanho {colliderSize}");
+        // Adiciona um segundo collider para redundância
+        BoxCollider secondCollider = gameObject.AddComponent<BoxCollider>();
+        secondCollider.isTrigger = true;
+        secondCollider.size = new Vector3(8, 8, 8);
+        secondCollider.center = Vector3.zero;
+        
+        Debug.Log($"Configurado collider da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina com tamanho AUMENTADO para garantir detecção");
     }
 
     /// <summary>
@@ -68,18 +74,24 @@ public class MachineTrigger : MonoBehaviour
     /// </summary>
     private void ProcessTrigger(Collider other)
     {
-        // Verifica se o objeto no trigger é o slime alvo do GameManager
-        if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject && !hasTriggered)
+        // Verifica se o objeto no trigger é o slime alvo do GameManager ou qualquer parte do slime
+        if (GameManager.Instance != null && GameManager.Instance.targetSlimeObject != null)
         {
-            hasTriggered = true;
-            Debug.Log($"TargetObject detectado na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
+            bool isTargetSlime = other.gameObject == GameManager.Instance.targetSlimeObject;
+            bool isChildOfTargetSlime = other.transform.IsChildOf(GameManager.Instance.targetSlimeObject.transform);
             
-            if (!isFirstMachine)
+            if ((isTargetSlime || isChildOfTargetSlime) && !hasTriggered)
             {
-                // Se for a segunda máquina, aciona a lógica de reação
-                GameManager.Instance.TriggerReactionMachine();
+                hasTriggered = true;
+                Debug.Log($"TargetObject detectado na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina. GameObject: {other.gameObject.name}");
+                
+                if (!isFirstMachine)
+                {
+                    // Se for a segunda máquina, aciona a lógica de reação
+                    GameManager.Instance.TriggerReactionMachine();
+                }
+                // Lógica para a primeira máquina (seleção de elemento) é tratada pelos ElementButton3D
             }
-            // Lógica para a primeira máquina (seleção de elemento) é tratada pelos ElementButton3D
         }
     }
 
