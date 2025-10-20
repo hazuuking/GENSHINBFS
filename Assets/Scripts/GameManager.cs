@@ -18,6 +18,9 @@ public class GameManager : MonoBehaviour
     public Transform spawnPoint; // arraste aqui o SpawnPoint da primeira máquina
     public GameObject slimePrefab; // arraste o prefab do slime (neutro)
 
+    [Header("Slime Spawner")]
+    [Tooltip("Reference to the SlimeSpawner component that handles slime spawning with physics")]
+    public SlimeSpawner slimeSpawner;
 
     private ElementalAuraManager targetAuraManager;
     private SlimeModelManager targetSlimeModelManager;
@@ -37,7 +40,16 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        SpawnSlime();
+        // Find SlimeSpawner if not assigned
+        if (slimeSpawner == null)
+        {
+            slimeSpawner = FindObjectOfType<SlimeSpawner>();
+            if (slimeSpawner == null)
+            {
+                Debug.LogWarning("SlimeSpawner not found. Falling back to built-in spawn method.");
+                SpawnSlime();
+            }
+        }
     }
 
     /// <summary>
@@ -132,10 +144,27 @@ public class GameManager : MonoBehaviour
             targetAuraManager.ClearAuras();
             Debug.Log("Slime alvo resetado.");
         }
+        
+        // Use SlimeSpawner to respawn the slime if available
+        if (slimeSpawner != null)
+        {
+            slimeSpawner.RespawnSlime();
+            Debug.Log("Slime respawned using SlimeSpawner.");
+        }
     }
 
     public void SpawnSlime()
 {
+    // If SlimeSpawner is available, use it instead
+    if (slimeSpawner != null)
+    {
+        slimeSpawner.SpawnSlime();
+        // Update references after SlimeSpawner has created the slime
+        UpdateTargetObject();
+        return;
+    }
+    
+    // Fallback to original method if SlimeSpawner is not available
     if (slimePrefab == null || spawnPoint == null)
     {
         Debug.LogError("SpawnPoint ou SlimePrefab não configurado no GameManager!");
@@ -148,11 +177,27 @@ public class GameManager : MonoBehaviour
     }
 
     targetSlimeObject = Instantiate(slimePrefab, spawnPoint.position, spawnPoint.rotation);
-    targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
-    targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+    UpdateTargetObject();
+}
 
-    if (targetAuraManager == null || targetSlimeModelManager == null)
-        Debug.LogWarning("Slime instanciado não possui os scripts esperados.");
+/// <summary>
+/// Updates references to the target object's components
+/// </summary>
+private void UpdateTargetObject()
+{
+    if (targetSlimeObject == null) return;
+    
+    targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
+    if (targetAuraManager == null)
+    {
+        targetAuraManager = targetSlimeObject.AddComponent<ElementalAuraManager>();
+    }
+    
+    targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+    if (targetSlimeModelManager == null)
+    {
+        targetSlimeModelManager = targetSlimeObject.AddComponent<SlimeModelManager>();
+    }
 }
 
 }
