@@ -9,7 +9,7 @@ public class GameManager : MonoBehaviour
 {
     /// <summary>
     /// O objeto 3D que receberá os elementos e exibirá as auras.
-    /// Deve ser atribuído no Inspector da Unity.
+    /// Será definido pelo SlimeSpawner.
     /// </summary>
     public GameObject targetObject; 
 
@@ -22,9 +22,13 @@ public class GameManager : MonoBehaviour
     /// <summary>
     /// Referência ao componente AuraManager no objeto alvo.
     /// Usado para controlar os efeitos visuais da aura elemental.
-    /// Deve ser atribuído no Inspector da Unity.
     /// </summary>
-    public AuraManager auraManager; 
+    public AuraManager auraManager;
+    
+    /// <summary>
+    /// Referência ao SlimeSpawner para gerenciar o slime alvo.
+    /// </summary>
+    public SlimeSpawner slimeSpawner;
 
     // A lista de 'elementButtons' foi removida, pois os botões agora são 3D e interagem diretamente.
 
@@ -34,6 +38,16 @@ public class GameManager : MonoBehaviour
     /// </summary>
     void Start()
     {
+        // Inicializa o slime se o spawner estiver disponível
+        if (slimeSpawner == null)
+        {
+            slimeSpawner = FindObjectOfType<SlimeSpawner>();
+            if (slimeSpawner == null)
+            {
+                Debug.LogError("SlimeSpawner não encontrado na cena!");
+            }
+        }
+        
         // Garante que o AuraManager existe antes de tentar usá-lo.
         if (auraManager != null)
         {
@@ -87,7 +101,7 @@ public class GameManager : MonoBehaviour
 
     /// <summary>
     /// Reseta o estado elemental do objeto alvo para 'None' e remove qualquer aura visual.
-    /// Este método é útil para testes ou para reiniciar o ciclo de aplicação de elementos.
+    /// Também respawna o slime se necessário.
     /// </summary>
     public void ResetObject()
     {
@@ -97,7 +111,39 @@ public class GameManager : MonoBehaviour
         {
             auraManager.SetAura(ElementType.None);
         }
-        Debug.Log("Objeto resetado.");
+        
+        // Respawna o slime se o spawner estiver disponível
+        if (slimeSpawner != null)
+        {
+            slimeSpawner.RespawnSlime();
+        }
+        
+        Debug.Log("Objeto resetado e slime respawnado.");
+    }
+    
+    /// <summary>
+    /// Atualiza o AuraManager quando o targetObject muda.
+    /// </summary>
+    /// <param name="newTarget">O novo objeto alvo.</param>
+    public void UpdateTargetObject(GameObject newTarget)
+    {
+        targetObject = newTarget;
+        
+        // Atualiza o AuraManager para o novo objeto
+        if (targetObject != null)
+        {
+            // Verifica se já existe um AuraManager no objeto
+            auraManager = targetObject.GetComponent<AuraManager>();
+            
+            // Se não existir, adiciona um novo
+            if (auraManager == null)
+            {
+                auraManager = targetObject.AddComponent<AuraManager>();
+            }
+            
+            // Aplica o elemento atual, se houver
+            auraManager.SetAura(currentObjectElement);
+        }
     }
 }
 
