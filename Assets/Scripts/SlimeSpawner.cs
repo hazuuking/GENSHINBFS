@@ -46,6 +46,11 @@ public class SlimeSpawner : MonoBehaviour
             {
                 Debug.LogError("GameManager not found! Please assign it in the inspector.");
             }
+            else
+            {
+                // Set reference to this SlimeSpawner in GameManager to prevent double spawning
+                gameManager.slimeSpawner = this;
+            }
         }
         
         // Spawn the slime
@@ -142,5 +147,14 @@ public class SlimeSpawner : MonoBehaviour
     public void RespawnSlime()
     {
         SpawnSlime();
+    }
+    
+    /// <summary>
+    /// Returns the currently spawned slime object
+    /// </summary>
+    /// <returns>The spawned slime GameObject or null if none exists</returns>
+    public GameObject GetSpawnedSlime()
+    {
+        return spawnedSlime;
     }
 }

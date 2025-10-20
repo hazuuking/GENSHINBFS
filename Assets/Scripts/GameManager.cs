@@ -49,6 +49,7 @@ public class GameManager : MonoBehaviour
                 Debug.LogWarning("SlimeSpawner not found. Falling back to built-in spawn method.");
                 SpawnSlime();
             }
+            // Don't call SpawnSlime here as SlimeSpawner will handle it
         }
     }
 
@@ -158,7 +159,11 @@ public class GameManager : MonoBehaviour
     // If SlimeSpawner is available, use it instead
     if (slimeSpawner != null)
     {
-        slimeSpawner.SpawnSlime();
+        // Check if the slime already exists to prevent double spawning
+        if (slimeSpawner.GetSpawnedSlime() == null)
+        {
+            slimeSpawner.SpawnSlime();
+        }
         // Update references after SlimeSpawner has created the slime
         UpdateTargetObject();
         return;
