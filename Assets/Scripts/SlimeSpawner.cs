@@ -50,11 +50,11 @@ public class SlimeSpawner : MonoBehaviour
             {
                 // Set reference to this SlimeSpawner in GameManager to prevent double spawning
                 gameManager.slimeSpawner = this;
+                
+                // Let GameManager handle the spawning
+                // DO NOT spawn here to avoid duplication
             }
         }
-        
-        // Spawn the slime
-        SpawnSlime();
     }
     
     /// <summary>
