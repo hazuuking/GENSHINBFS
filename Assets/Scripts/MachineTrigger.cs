@@ -8,7 +8,42 @@ public class MachineTrigger : MonoBehaviour
     /// <summary>
     /// Indica se esta é a primeira máquina (true) ou a segunda (false).
     /// </summary>
-    public bool isFirstMachine = true; 
+    public bool isFirstMachine = true;
+    
+    /// <summary>
+    /// Tamanho do collider da máquina
+    /// </summary>
+    public Vector3 colliderSize = new Vector3(5, 5, 5);
+    
+    /// <summary>
+    /// Flag para evitar múltiplas detecções
+    /// </summary>
+    private bool hasTriggered = false;
+    
+    void Start()
+    {
+        // Garante que o collider está configurado corretamente
+        ConfigureCollider();
+    }
+    
+    /// <summary>
+    /// Configura o collider da máquina para garantir detecção
+    /// </summary>
+    private void ConfigureCollider()
+    {
+        BoxCollider boxCollider = GetComponent<BoxCollider>();
+        if (boxCollider == null)
+        {
+            boxCollider = gameObject.AddComponent<BoxCollider>();
+        }
+        
+        // Configura o collider como trigger e com tamanho adequado
+        boxCollider.isTrigger = true;
+        boxCollider.size = colliderSize;
+        boxCollider.center = Vector3.zero;
+        
+        Debug.Log($"Configurado collider da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina com tamanho {colliderSize}");
+    }
 
     /// <summary>
     /// Chamado quando outro Collider entra no trigger.
@@ -16,15 +51,32 @@ public class MachineTrigger : MonoBehaviour
     /// <param name="other">O Collider que entrou no trigger.</param>
     void OnTriggerEnter(Collider other)
     {
-        // Verifica se o objeto que entrou no trigger é o slime alvo do GameManager
-        if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject)
+        ProcessTrigger(other);
+    }
+    
+    /// <summary>
+    /// Chamado continuamente enquanto outro Collider está no trigger.
+    /// </summary>
+    /// <param name="other">O Collider que está no trigger.</param>
+    void OnTriggerStay(Collider other)
+    {
+        ProcessTrigger(other);
+    }
+    
+    /// <summary>
+    /// Processa a detecção do trigger
+    /// </summary>
+    private void ProcessTrigger(Collider other)
+    {
+        // Verifica se o objeto no trigger é o slime alvo do GameManager
+        if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject && !hasTriggered)
         {
-            Debug.Log($"TargetObject entrou na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
+            hasTriggered = true;
+            Debug.Log($"TargetObject detectado na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
             
             if (!isFirstMachine)
             {
                 // Se for a segunda máquina, aciona a lógica de reação
-                // O GameManager agora determinará o melhor elemento para reagir
                 GameManager.Instance.TriggerReactionMachine();
             }
             // Lógica para a primeira máquina (seleção de elemento) é tratada pelos ElementButton3D
@@ -41,6 +93,9 @@ public class MachineTrigger : MonoBehaviour
         if (GameManager.Instance != null && other.gameObject == GameManager.Instance.targetSlimeObject)
         {
             Debug.Log($"TargetObject saiu da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina.");
+            // Resetamos a flag para permitir nova detecção
+            hasTriggered = false;
+            
             // Opcional: Lógica para resetar o slime ou prepará-lo para a próxima fase
             if (!isFirstMachine)
             {

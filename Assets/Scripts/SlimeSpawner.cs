@@ -98,14 +98,15 @@ public class SlimeSpawner : MonoBehaviour
             rb = spawnedSlime.AddComponent<Rigidbody>();
         }
         
-        // Configure Rigidbody
+        // Configure Rigidbody properties
         rb.mass = slimeMass;
-        rb.drag = 0.5f;
-        rb.angularDrag = 0.5f; // Changed from 0.05f to 0.5f
+        rb.drag = 1.5f; // Aumentado para reduzir a velocidade
+        rb.angularDrag = 1.0f; // Aumentado para melhor estabilidade
         rb.useGravity = true;
-        rb.isKinematic = false;
+        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // Melhor detecção
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        rb.isKinematic = false; // Garante que não é kinematic
+        rb.maxDepenetrationVelocity = 1.0f; // Limita a velocidade de separação
         
         // Add or get SphereCollider
         SphereCollider sphereCollider = spawnedSlime.GetComponent<SphereCollider>();
