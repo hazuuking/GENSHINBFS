@@ -41,7 +41,7 @@ public class ConveyorBeltController : MonoBehaviour
             return;
         }
 
-        // Obtém o Collider e garante que é um trigger
+        // Obtém o Collider e garante que NÃO é um trigger
         beltCollider = GetComponent<Collider>();
         if (beltCollider == null)
         {
@@ -50,7 +50,13 @@ public class ConveyorBeltController : MonoBehaviour
             return;
         }
 
-        beltCollider.isTrigger = true;
+        // Importante: NÃO é trigger para permitir colisão física
+        beltCollider.isTrigger = false;
+        
+        // Adiciona um segundo collider como trigger para detectar o slime
+        BoxCollider triggerCollider = gameObject.AddComponent<BoxCollider>();
+        triggerCollider.isTrigger = true;
+        triggerCollider.size = beltCollider.bounds.size * 1.1f; // Ligeiramente maior
     }
 
     void Update()
@@ -61,6 +67,30 @@ public class ConveyorBeltController : MonoBehaviour
         beltRenderer.material.SetTextureOffset("_MainTex", new Vector2(offsetU, offsetV));
     }
 
+    // Detecta colisão física com o collider não-trigger
+    void OnCollisionStay(Collision collision)
+    {
+        Rigidbody rb = collision.rigidbody;
+
+        if (rb != null && !rb.isKinematic)
+        {
+            // Direção local da esteira (usando orientação do objeto)
+            Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
+
+            // --- Força principal (empurra o slime pra frente) ---
+            rb.AddForce(moveDir * conveyorForce * 2f, ForceMode.Acceleration); // Força aumentada
+
+            // --- Resistência / controle de velocidade ---
+            // Mantém o slime numa velocidade-alvo estável, sem atravessar
+            Vector3 desiredVelocity = moveDir * targetSpeed;
+            rb.velocity = Vector3.Lerp(rb.velocity, desiredVelocity, Time.deltaTime * damping * 2f); // Damping aumentado
+            
+            // Garante que o slime não afunda na esteira
+            rb.AddForce(Vector3.up * 2f, ForceMode.Acceleration);
+        }
+    }
+    
+    // Ainda mantém o trigger para detecção adicional
     void OnTriggerStay(Collider other)
     {
         Rigidbody rb = other.attachedRigidbody;
@@ -69,14 +99,9 @@ public class ConveyorBeltController : MonoBehaviour
         {
             // Direção local da esteira (usando orientação do objeto)
             Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
-
-            // --- Força principal (empurra o slime pra frente) ---
+            
+            // Força adicional para garantir movimento
             rb.AddForce(moveDir * conveyorForce, ForceMode.Acceleration);
-
-            // --- Resistência / controle de velocidade ---
-            // Mantém o slime numa velocidade-alvo estável, sem atravessar
-            Vector3 desiredVelocity = moveDir * targetSpeed;
-            rb.velocity = Vector3.Lerp(rb.velocity, desiredVelocity, Time.deltaTime * damping);
         }
     }
 
