@@ -146,7 +146,6 @@ public class SlimeSpawner : MonoBehaviour
             {
                 auraManager = spawnedSlime.AddComponent<ElementalAuraManager>();
             }
-            gameManager.targetAuraManager = auraManager;
             
             // Get or add SlimeModelManager
             SlimeModelManager modelManager = spawnedSlime.GetComponent<SlimeModelManager>();
@@ -154,7 +153,9 @@ public class SlimeSpawner : MonoBehaviour
             {
                 modelManager = spawnedSlime.AddComponent<SlimeModelManager>();
             }
-            gameManager.targetModelManager = modelManager;
+            
+            // Atualiza o GameManager chamando o método UpdateTargetObject
+            gameManager.UpdateTargetComponents();
         }
         
         Debug.Log("Slime spawned successfully with physics and collision detection.");

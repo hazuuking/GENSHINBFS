@@ -206,6 +206,14 @@ private void UpdateTargetObject()
     }
 }
 
+/// <summary>
+/// Método público para atualizar os componentes do slime a partir de outros scripts
+/// </summary>
+public void UpdateTargetComponents()
+{
+    UpdateTargetObject();
+}
+
 }
 
 
