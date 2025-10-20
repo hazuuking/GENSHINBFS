@@ -47,11 +47,11 @@ public class GameManager : MonoBehaviour
             if (slimeSpawner == null)
             {
                 Debug.LogWarning("SlimeSpawner not found. Falling back to built-in spawn method.");
+                // Apenas spawna se não houver SlimeSpawner
+                SpawnSlime();
             }
         }
-        
-        // GameManager is now responsible for spawning the slime
-        SpawnSlime();
+        // Não chama SpawnSlime aqui para evitar múltiplos spawns
     }
 
     /// <summary>
