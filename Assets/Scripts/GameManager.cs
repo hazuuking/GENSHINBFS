@@ -12,7 +12,12 @@ public class GameManager : MonoBehaviour
 
     [Header("Configuração do Alvo")]
     [Tooltip("O objeto 3D que receberá os elementos e exibirá as auras. Deve ter um ElementalAuraManager e SlimeModelManager.")]
-    public GameObject targetSlimeObject; 
+    public GameObject targetSlimeObject;
+
+    [Header("Spawn do Slime")]
+    public Transform spawnPoint; // arraste aqui o SpawnPoint da primeira máquina
+    public GameObject slimePrefab; // arraste o prefab do slime (neutro)
+
 
     private ElementalAuraManager targetAuraManager;
     private SlimeModelManager targetSlimeModelManager;
@@ -32,24 +37,7 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
-        if (targetSlimeObject != null)
-        {
-            targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
-            targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
-
-            if (targetAuraManager == null)
-            {
-                Debug.LogError("Target Slime Object não possui um ElementalAuraManager.");
-            }
-            if (targetSlimeModelManager == null)
-            {
-                Debug.LogError("Target Slime Object não possui um SlimeModelManager.");
-            }
-        }
-        else
-        {
-            Debug.LogError("Target Slime Object não atribuído no GameManager.");
-        }
+        SpawnSlime();
     }
 
     /// <summary>
@@ -145,6 +133,28 @@ public class GameManager : MonoBehaviour
             Debug.Log("Slime alvo resetado.");
         }
     }
+
+    public void SpawnSlime()
+{
+    if (slimePrefab == null || spawnPoint == null)
+    {
+        Debug.LogError("SpawnPoint ou SlimePrefab não configurado no GameManager!");
+        return;
+    }
+
+    if (targetSlimeObject != null)
+    {
+        Destroy(targetSlimeObject); // remove o antigo se existir
+    }
+
+    targetSlimeObject = Instantiate(slimePrefab, spawnPoint.position, spawnPoint.rotation);
+    targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
+    targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+
+    if (targetAuraManager == null || targetSlimeModelManager == null)
+        Debug.LogWarning("Slime instanciado não possui os scripts esperados.");
+}
+
 }
 
 
