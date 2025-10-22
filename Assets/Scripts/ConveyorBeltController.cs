@@ -77,8 +77,7 @@ public class ConveyorBeltController : MonoBehaviour
             // Direção local da esteira (usando orientação do objeto)
             Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
 
-            // Log de diagnóstico para confirmar contato
-            Debug.Log($"Esteira em contato com: {rb.gameObject.name}. v\u0307={Vector3.Dot(rb.velocity, moveDir):F2}");
+            // Esteira em contato com objeto
 
             // Aceleração robusta na direção da esteira baseada na diferença de velocidade
             float currentAlong = Vector3.Dot(rb.velocity, moveDir);

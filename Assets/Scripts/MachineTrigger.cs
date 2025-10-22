@@ -48,7 +48,7 @@ public class MachineTrigger : MonoBehaviour
         secondCollider.size = new Vector3(8, 8, 8);
         secondCollider.center = Vector3.zero;
         
-        Debug.Log($"Configurado collider da {(isFirstMachine ? "Primeira" : "Segunda")} Máquina com tamanho AUMENTADO para garantir detecção");
+        // Collider configurado com tamanho aumentado para garantir detecção
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public class MachineTrigger : MonoBehaviour
             if ((isTargetSlime || isChildOfTargetSlime) && !hasTriggered)
             {
                 hasTriggered = true;
-                Debug.Log($"TargetObject detectado na {(isFirstMachine ? "Primeira" : "Segunda")} Máquina. GameObject: {other.gameObject.name}");
+                // Target object detectado na máquina
                 
                 if (!isFirstMachine)
                 {

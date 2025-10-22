@@ -238,7 +238,7 @@ public class SlimeSpawner : MonoBehaviour
     private void DelayedSpawn()
     {
         SpawnSlime();
-        Debug.Log("Slime respawned with delay to prevent physics issues");
+        // Slime respawned with delay to prevent physics issues
     }
     
     /// <summary>
