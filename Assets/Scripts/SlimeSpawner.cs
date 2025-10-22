@@ -63,11 +63,12 @@ public class SlimeSpawner : MonoBehaviour
     private void CreateSlimePhysicMaterial()
     {
         slimePhysicMaterial = new PhysicMaterial("SlimePhysicMaterial");
-        slimePhysicMaterial.bounciness = bounciness;
-        slimePhysicMaterial.dynamicFriction = friction;
-        slimePhysicMaterial.staticFriction = friction;
-        slimePhysicMaterial.frictionCombine = PhysicMaterialCombine.Average;
-        slimePhysicMaterial.bounceCombine = PhysicMaterialCombine.Average;
+        // Ajustes para melhor aderência na esteira
+        slimePhysicMaterial.bounciness = 0f;
+        slimePhysicMaterial.dynamicFriction = 0.6f;
+        slimePhysicMaterial.staticFriction = 0.6f;
+        slimePhysicMaterial.frictionCombine = PhysicMaterialCombine.Maximum;
+        slimePhysicMaterial.bounceCombine = PhysicMaterialCombine.Minimum;
     }
     
     /// <summary>
@@ -124,7 +125,7 @@ public class SlimeSpawner : MonoBehaviour
         rb.interpolation = RigidbodyInterpolation.Interpolate;
         rb.sleepThreshold = 0.0f;
         rb.constraints = RigidbodyConstraints.None;
-        rb.maxDepenetrationVelocity = 1.0f;
+        rb.maxDepenetrationVelocity = 10.0f;
         
         // Add or get SphereCollider
         SphereCollider sphereCollider = slimeObject.GetComponent<SphereCollider>();
@@ -161,8 +162,7 @@ public class SlimeSpawner : MonoBehaviour
             }
         }
         
-        // Verifica se as máquinas têm colliders configurados como triggers
-        CheckMachineColliders();
+        // Removido: não alterar colliders das máquinas globalmente aqui
     }
     
     /// <summary>

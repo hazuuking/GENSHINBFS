@@ -77,16 +77,17 @@ public class ConveyorBeltController : MonoBehaviour
             // Direção local da esteira (usando orientação do objeto)
             Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
 
-            // --- Força principal (empurra o slime pra frente) ---
-            rb.AddForce(moveDir * conveyorForce * 2f, ForceMode.Acceleration); // Força aumentada
+            // Log de diagnóstico para confirmar contato
+            Debug.Log($"Esteira em contato com: {rb.gameObject.name}. v\u0307={Vector3.Dot(rb.velocity, moveDir):F2}");
 
-            // --- Resistência / controle de velocidade ---
-            // Mantém o slime numa velocidade-alvo estável, sem atravessar
-            Vector3 desiredVelocity = moveDir * targetSpeed;
-            rb.velocity = Vector3.Lerp(rb.velocity, desiredVelocity, Time.deltaTime * damping * 2f); // Damping aumentado
-            
-            // Garante que o slime não afunda na esteira
-            rb.AddForce(Vector3.up * 2f, ForceMode.Acceleration);
+            // Aceleração robusta na direção da esteira baseada na diferença de velocidade
+            float currentAlong = Vector3.Dot(rb.velocity, moveDir);
+            float delta = targetSpeed - currentAlong;
+            // Muda a velocidade instantaneamente na componente da direção
+            rb.AddForce(moveDir * delta, ForceMode.VelocityChange);
+
+            // Leve sustentação para evitar afundar na esteira
+            rb.AddForce(Vector3.up * 0.5f, ForceMode.Acceleration);
         }
     }
     
@@ -100,8 +101,8 @@ public class ConveyorBeltController : MonoBehaviour
             // Direção local da esteira (usando orientação do objeto)
             Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
             
-            // Força adicional para garantir movimento
-            rb.AddForce(moveDir * conveyorForce, ForceMode.Acceleration);
+            // Apoio mínimo: só um leve empurrão caso a colisão esteja instável
+            rb.AddForce(moveDir * (conveyorForce * 0.25f), ForceMode.Acceleration);
         }
     }
 
