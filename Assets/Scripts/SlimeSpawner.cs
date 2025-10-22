@@ -195,34 +195,6 @@ public class SlimeSpawner : MonoBehaviour
         }
         
         return basePosition;
-        
-        // Toda a configuração do slime foi movida para o método ConfigureSlime
-        
-        // Update the GameManager's target object
-        if (gameManager != null)
-        {
-            gameManager.targetSlimeObject = spawnedSlime;
-            
-            // Get or add ElementalAuraManager
-            ElementalAuraManager auraManager = spawnedSlime.GetComponent<ElementalAuraManager>();
-            if (auraManager == null)
-            {
-                auraManager = spawnedSlime.AddComponent<ElementalAuraManager>();
-            }
-            
-            // Get or add SlimeModelManager
-            SlimeModelManager modelManager = spawnedSlime.GetComponent<SlimeModelManager>();
-            if (modelManager == null)
-            {
-                modelManager = spawnedSlime.AddComponent<SlimeModelManager>();
-            }
-            
-            // Atualiza o GameManager chamando o método UpdateTargetObject
-            gameManager.UpdateTargetComponents();
-        }
-        
-        Debug.Log("Slime spawned successfully with physics and collision detection.");
-        return spawnedSlime;
     }
     
     // Método para verificar se as máquinas têm colliders configurados como triggers
