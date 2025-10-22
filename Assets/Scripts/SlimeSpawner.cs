@@ -88,8 +88,23 @@ public class SlimeSpawner : MonoBehaviour
             Destroy(spawnedSlime);
         }
         
-        // Instantiate the new slime
-        spawnedSlime = Instantiate(slimePrefab, spawnPoint.position, spawnPoint.rotation);
+        // Verificar se há máquinas próximas ao ponto de spawn
+        Vector3 safeSpawnPosition = GetSafeSpawnPosition();
+        
+        // Instantiate the new slime na posição segura
+        spawnedSlime = Instantiate(slimePrefab, safeSpawnPosition, spawnPoint.rotation);
+        
+        // Configurar o slime e retornar
+        ConfigureSlime();
+        return spawnedSlime;
+    }
+    
+    /// <summary>
+    /// Configura os componentes físicos do slime
+    /// </summary>
+    private void ConfigureSlime()
+    {
+        if (spawnedSlime == null) return;
         
         // Add or get Rigidbody
         Rigidbody rb = spawnedSlime.GetComponent<Rigidbody>();
@@ -98,26 +113,17 @@ public class SlimeSpawner : MonoBehaviour
             rb = spawnedSlime.AddComponent<Rigidbody>();
         }
         
-        // Configurações críticas para melhorar a detecção de colisão e interação com a esteira
+        // Configurações críticas para melhorar a detecção de colisão
         rb.isKinematic = false;
         rb.useGravity = true;
-        rb.drag = 1.5f; // Reduzido para permitir movimento na esteira
-        rb.angularDrag = 0.5f; // Reduzido para permitir rotação
-        rb.mass = 1.0f; // Massa padrão
+        rb.drag = 1.5f;
+        rb.angularDrag = 0.5f;
+        rb.mass = 1.0f;
         rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic;
         rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.sleepThreshold = 0.0f; // Nunca dorme
-        rb.constraints = RigidbodyConstraints.None; // Remove restrições de movimento
-        
-        // Configure Rigidbody properties
-        rb.mass = slimeMass;
-        rb.drag = 1.5f; // Aumentado para reduzir a velocidade
-        rb.angularDrag = 1.0f; // Aumentado para melhor estabilidade
-        rb.useGravity = true;
-        rb.collisionDetectionMode = CollisionDetectionMode.ContinuousDynamic; // Melhor detecção
-        rb.interpolation = RigidbodyInterpolation.Interpolate;
-        rb.isKinematic = false; // Garante que não é kinematic
-        rb.maxDepenetrationVelocity = 1.0f; // Limita a velocidade de separação
+        rb.sleepThreshold = 0.0f;
+        rb.constraints = RigidbodyConstraints.None;
+        rb.maxDepenetrationVelocity = 1.0f;
         
         // Add or get SphereCollider
         SphereCollider sphereCollider = spawnedSlime.GetComponent<SphereCollider>();
@@ -129,10 +135,14 @@ public class SlimeSpawner : MonoBehaviour
         // Configure SphereCollider - IMPORTANTE: NÃO é trigger
         sphereCollider.radius = colliderRadius;
         sphereCollider.material = slimePhysicMaterial;
-        sphereCollider.isTrigger = false; // Garante que não é trigger para colisão física
+        sphereCollider.isTrigger = false;
         
         // Adiciona BoxCollider para melhorar a detecção
-        BoxCollider boxCollider = spawnedSlime.AddComponent<BoxCollider>();
+        BoxCollider boxCollider = spawnedSlime.GetComponent<BoxCollider>();
+        if (boxCollider == null)
+        {
+            boxCollider = spawnedSlime.AddComponent<BoxCollider>();
+        }
         boxCollider.size = new Vector3(colliderRadius * 2, colliderRadius * 2, colliderRadius * 2);
         boxCollider.isTrigger = false;
         boxCollider.material = slimePhysicMaterial;
@@ -152,6 +162,40 @@ public class SlimeSpawner : MonoBehaviour
         
         // Verifica se as máquinas têm colliders configurados como triggers
         CheckMachineColliders();
+    }
+    
+    /// <summary>
+    /// Encontra uma posição segura para o spawn do slime, evitando máquinas
+    /// </summary>
+    private Vector3 GetSafeSpawnPosition()
+    {
+        // Posição base do spawn point
+        Vector3 basePosition = spawnPoint.position;
+        
+        // Verificar se há máquinas próximas
+        Collider[] colliders = Physics.OverlapSphere(basePosition, 1.0f);
+        bool isInsideMachine = false;
+        
+        foreach (Collider col in colliders)
+        {
+            // Verifica se é uma máquina
+            if (col.GetComponent<MachineTrigger>() != null)
+            {
+                isInsideMachine = true;
+                Debug.LogWarning("Spawn point está dentro de uma máquina! Ajustando posição...");
+                break;
+            }
+        }
+        
+        // Se estiver dentro de uma máquina, ajusta a posição para cima
+        if (isInsideMachine)
+        {
+            return new Vector3(basePosition.x, basePosition.y + 2.0f, basePosition.z);
+        }
+        
+        return basePosition;
+        
+        // Toda a configuração do slime foi movida para o método ConfigureSlime
         
         // Update the GameManager's target object
         if (gameManager != null)

@@ -50,6 +50,15 @@ public class GameManager : MonoBehaviour
                 // Apenas spawna se não houver SlimeSpawner
                 SpawnSlime();
             }
+            else
+            {
+                // Garantir que o GameManager não tente spawnar o slime se o SlimeSpawner já o fez
+                if (targetSlimeObject == null && slimeSpawner.GetSpawnedSlime() != null)
+                {
+                    targetSlimeObject = slimeSpawner.GetSpawnedSlime();
+                    UpdateTargetObject();
+                }
+            }
         }
         // Não chama SpawnSlime aqui para evitar múltiplos spawns
     }
@@ -160,12 +169,20 @@ public class GameManager : MonoBehaviour
     // If SlimeSpawner is available, use it instead
     if (slimeSpawner != null)
     {
-        // Check if the slime already exists to prevent double spawning
-        if (slimeSpawner.GetSpawnedSlime() == null)
+        // Verificar se já existe um slime no jogo
+        GameObject existingSlime = slimeSpawner.GetSpawnedSlime();
+        
+        // Se o slime já existe e ainda é válido, apenas atualiza as referências
+        if (existingSlime != null)
         {
-            slimeSpawner.SpawnSlime();
+            Debug.Log("Slime já existe. Apenas atualizando referências.");
+            targetSlimeObject = existingSlime;
+            UpdateTargetObject();
+            return;
         }
-        // Update references after SlimeSpawner has created the slime
+        
+        // Se não existe slime ou foi destruído, cria um novo
+        targetSlimeObject = slimeSpawner.SpawnSlime();
         UpdateTargetObject();
         return;
     }
