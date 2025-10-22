@@ -95,22 +95,23 @@ public class SlimeSpawner : MonoBehaviour
         spawnedSlime = Instantiate(slimePrefab, safeSpawnPosition, spawnPoint.rotation);
         
         // Configurar o slime e retornar
-        ConfigureSlime();
+        ConfigureSlime(spawnedSlime);
         return spawnedSlime;
     }
     
     /// <summary>
     /// Configura os componentes físicos do slime
     /// </summary>
-    private void ConfigureSlime()
+    /// <param name="slimeObject">O objeto do slime a ser configurado</param>
+    private void ConfigureSlime(GameObject slimeObject)
     {
-        if (spawnedSlime == null) return;
+        if (slimeObject == null) return;
         
         // Add or get Rigidbody
-        Rigidbody rb = spawnedSlime.GetComponent<Rigidbody>();
+        Rigidbody rb = slimeObject.GetComponent<Rigidbody>();
         if (rb == null)
         {
-            rb = spawnedSlime.AddComponent<Rigidbody>();
+            rb = slimeObject.AddComponent<Rigidbody>();
         }
         
         // Configurações críticas para melhorar a detecção de colisão
@@ -126,10 +127,10 @@ public class SlimeSpawner : MonoBehaviour
         rb.maxDepenetrationVelocity = 1.0f;
         
         // Add or get SphereCollider
-        SphereCollider sphereCollider = spawnedSlime.GetComponent<SphereCollider>();
+        SphereCollider sphereCollider = slimeObject.GetComponent<SphereCollider>();
         if (sphereCollider == null)
         {
-            sphereCollider = spawnedSlime.AddComponent<SphereCollider>();
+            sphereCollider = slimeObject.AddComponent<SphereCollider>();
         }
         
         // Configure SphereCollider - IMPORTANTE: NÃO é trigger
@@ -138,20 +139,20 @@ public class SlimeSpawner : MonoBehaviour
         sphereCollider.isTrigger = false;
         
         // Adiciona BoxCollider para melhorar a detecção
-        BoxCollider boxCollider = spawnedSlime.GetComponent<BoxCollider>();
+        BoxCollider boxCollider = slimeObject.GetComponent<BoxCollider>();
         if (boxCollider == null)
         {
-            boxCollider = spawnedSlime.AddComponent<BoxCollider>();
+            boxCollider = slimeObject.AddComponent<BoxCollider>();
         }
         boxCollider.size = new Vector3(colliderRadius * 2, colliderRadius * 2, colliderRadius * 2);
         boxCollider.isTrigger = false;
         boxCollider.material = slimePhysicMaterial;
         
         // Ensure the slime is on the default layer for proper collision detection
-        spawnedSlime.layer = LayerMask.NameToLayer("Default");
+        slimeObject.layer = LayerMask.NameToLayer("Default");
         
         // Garante que todos os filhos também tenham colisão
-        foreach (Transform child in spawnedSlime.transform)
+        foreach (Transform child in slimeObject.transform)
         {
             // Adiciona colliders aos filhos se necessário
             if (child.GetComponent<Collider>() == null)
