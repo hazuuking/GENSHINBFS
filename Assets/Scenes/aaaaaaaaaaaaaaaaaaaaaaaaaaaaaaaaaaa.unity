@@ -309,8 +309,8 @@ Transform:
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -1.97, y: 1.85, z: 6.93}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_ConstrainProportionsScale: 1
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -657,83 +657,6 @@ MonoBehaviour:
   spawnPoint: {fileID: 284072833}
   slimePrefab: {fileID: 362178539}
   slimeSpawner: {fileID: 284072834}
---- !u!1001 &1140364120
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: -878088932899052939, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_Center.x
-      value: 3.69
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalScale.x
-      value: 0.75
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 0.75
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalScale.z
-      value: 0.75
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: -4.93
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.5
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 5.43
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6964015326156562051, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_ConstrainProportionsScale
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 7777425900315886649, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
-      propertyPath: m_Name
-      value: slime_neutro
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
 --- !u!1 &1398460876
 GameObject:
   m_ObjectHideFlags: 0
@@ -821,7 +744,7 @@ Transform:
   m_GameObject: {fileID: 1398460876}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.07, y: 2.84, z: -0.87}
+  m_LocalPosition: {x: -0.07, y: 2.84, z: -0.82}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1041,7 +964,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   scrollSpeed: 0.5
-  scrollDirection: {x: 0, y: 1}
+  scrollDirection: {x: 1, y: 0}
   conveyorForce: 5
   targetSpeed: 4
   damping: 2
@@ -1609,4 +1532,3 @@ SceneRoots:
   - {fileID: 1401733996}
   - {fileID: 362178544}
   - {fileID: 2297206193099448744}
-  - {fileID: 1140364120}
