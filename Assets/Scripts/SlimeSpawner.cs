@@ -33,6 +33,9 @@ public class SlimeSpawner : MonoBehaviour
     private GameObject spawnedSlime;
     private PhysicMaterial slimePhysicMaterial;
     
+    private bool isSpawning = false;
+    private bool respawnScheduled = false;
+    
     void Start()
     {
         // Create physics material for the slime
@@ -83,6 +86,13 @@ public class SlimeSpawner : MonoBehaviour
             return null;
         }
         
+        // Evita spawns concorrentes no mesmo frame
+        if (isSpawning)
+        {
+            return spawnedSlime;
+        }
+        isSpawning = true;
+        
         // Destroy previous slime if it exists
         if (spawnedSlime != null)
         {
@@ -97,6 +107,8 @@ public class SlimeSpawner : MonoBehaviour
         
         // Configurar o slime e retornar
         ConfigureSlime(spawnedSlime);
+        
+        isSpawning = false;
         return spawnedSlime;
     }
     
@@ -224,6 +236,13 @@ public class SlimeSpawner : MonoBehaviour
     /// </summary>
     public void RespawnSlime()
     {
+        // Evita programar múltiplos respawns em sequência
+        if (respawnScheduled)
+        {
+            return;
+        }
+        respawnScheduled = true;
+        
         // Garantir que qualquer slime existente seja destruído
         if (spawnedSlime != null)
         {
@@ -238,6 +257,7 @@ public class SlimeSpawner : MonoBehaviour
     private void DelayedSpawn()
     {
         SpawnSlime();
+        respawnScheduled = false;
         // Slime respawned with delay to prevent physics issues
     }
     
