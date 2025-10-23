@@ -85,12 +85,16 @@ public class MachineTrigger : MonoBehaviour
                 hasTriggered = true;
                 // Target object detectado na máquina
                 
-                if (!isFirstMachine)
+                if (isFirstMachine)
+                {
+                    // Se for a primeira máquina, pausa o slime para seleção de elemento
+                    GameManager.Instance.PauseSlimeAtFirstMachine();
+                }
+                else
                 {
                     // Se for a segunda máquina, aciona a lógica de reação
                     GameManager.Instance.TriggerReactionMachine();
                 }
-                // Lógica para a primeira máquina (seleção de elemento) é tratada pelos ElementButton3D
             }
         }
     }

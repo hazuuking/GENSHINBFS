@@ -74,6 +74,15 @@ public class GameManager : MonoBehaviour
         {
             targetAuraManager.ApplyElement(selectedElement);
             Debug.Log($"Elemento {selectedElement} aplicado ao slime.");
+            
+            // Muda o modelo do slime baseado no elemento selecionado
+            if (targetSlimeModelManager != null)
+            {
+                targetSlimeModelManager.ChangeSlimeModel(selectedElement);
+            }
+            
+            // Libera o slime para continuar após a seleção
+            ReleaseSlimeFromFirstMachine();
         }
         else
         {
@@ -229,6 +238,44 @@ private void UpdateTargetObject()
 public void UpdateTargetComponents()
 {
     UpdateTargetObject();
+}
+
+/// <summary>
+/// Pausa o slime na primeira máquina para seleção de elemento
+/// </summary>
+public void PauseSlimeAtFirstMachine()
+{
+    if (targetSlimeObject != null)
+    {
+        Rigidbody rb = targetSlimeObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            // Pausa o movimento do slime
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = true;
+        }
+        
+        Debug.Log("Slime pausado na primeira máquina. Aguardando seleção de elemento.");
+    }
+}
+
+/// <summary>
+/// Libera o slime para continuar após seleção de elemento
+/// </summary>
+public void ReleaseSlimeFromFirstMachine()
+{
+    if (targetSlimeObject != null)
+    {
+        Rigidbody rb = targetSlimeObject.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            // Libera o movimento do slime
+            rb.isKinematic = false;
+        }
+        
+        Debug.Log("Slime liberado da primeira máquina.");
+    }
 }
 
 }

@@ -132,6 +132,20 @@ public class SlimeModelManager : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Método público para mudar o modelo do slime baseado no elemento selecionado
+    /// </summary>
+    /// <param name="selectedElement">O elemento selecionado para aplicar ao slime</param>
+    public void ChangeSlimeModel(ElementType selectedElement)
+    {
+        // Força a atualização do modelo para o elemento selecionado
+        UpdateSlimeModel(selectedElement, ElementType.None);
+        lastKnownElementType = selectedElement;
+        lastKnownStatusType = ElementType.None;
+        
+        Debug.Log($"Modelo do slime alterado para: {selectedElement}");
+    }
 }
 
 
