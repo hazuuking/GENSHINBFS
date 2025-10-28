@@ -1,151 +1,109 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// SlimeModelManager: gerencia a instância visual do slime de acordo com o ElementType/status.
+/// Mantém apenas 1 GameObject filho como representação visual.
+/// </summary>
 public class SlimeModelManager : MonoBehaviour
 {
-    public ElementalAuraManager auraManager; // Referência ao ElementalAuraManager do slime
-
     [System.Serializable]
     public class SlimeModelEntry
     {
         public ElementType elementType;
-        public GameObject slimeModelPrefab; // Prefab do modelo 3D do slime para este elemento
+        public GameObject slimeModelPrefab;
     }
 
-    public List<SlimeModelEntry> slimeModels;
+    [Tooltip("Lista de modelos por ElementType (inclua 'None' como fallback).")]
+    public List<SlimeModelEntry> slimeModels = new List<SlimeModelEntry>();
+
+    [HideInInspector] public ElementalAuraManager auraManager; // opcional, será buscado se null
 
     private GameObject currentSlimeModelInstance;
-    private ElementType lastKnownElementType = ElementType.None;
-    private ElementType lastKnownStatusType = ElementType.None;
+    private ElementType lastElement = ElementType.None;
+    private ElementType lastStatus = ElementType.None;
 
     void Start()
     {
-        if (auraManager == null)
-        {
-            auraManager = GetComponent<ElementalAuraManager>();
-            if (auraManager == null)
-            {
-                Debug.LogError("SlimeModelManager requer um ElementalAuraManager no mesmo GameObject ou atribuído.");
-                enabled = false; // Desativa o script se não encontrar o AuraManager
-                return;
-            }
-        }
-        // Inicializa com o modelo neutro ou o modelo da aura inicial, se houver
-        UpdateSlimeModel(auraManager.currentAura, auraManager.currentStatus);
+        if (auraManager == null) auraManager = GetComponent<ElementalAuraManager>();
+        // Inicializa visual com base no estado atual (se houver)
+        UpdateSlimeModel(auraManager != null ? auraManager.currentAura : ElementType.None,
+                         auraManager != null ? auraManager.currentStatus : ElementType.None);
     }
 
     void Update()
     {
-        // Verifica se a aura principal ou o status mudou e atualiza o modelo
-        if (auraManager.currentAura != lastKnownElementType || auraManager.currentStatus != lastKnownStatusType)
+        if (auraManager == null) return;
+        if (auraManager.currentAura != lastElement || auraManager.currentStatus != lastStatus)
         {
             UpdateSlimeModel(auraManager.currentAura, auraManager.currentStatus);
-            lastKnownElementType = auraManager.currentAura;
-            lastKnownStatusType = auraManager.currentStatus;
+            lastElement = auraManager.currentAura;
+            lastStatus = auraManager.currentStatus;
         }
 
-        // Opcional: Manter o slime sempre olhando para a câmera após a inicialização
+        // Rotate to face camera (optional aesthetic)
         if (currentSlimeModelInstance != null && Camera.main != null)
         {
-            Vector3 lookDirection = Camera.main.transform.position - currentSlimeModelInstance.transform.position;
-            lookDirection.y = 0; // Ignora a rotação no eixo Y para não inclinar o slime
-            if (lookDirection != Vector3.zero)
-            {
-                currentSlimeModelInstance.transform.rotation = Quaternion.LookRotation(lookDirection);
-            }
+            Vector3 lookDir = Camera.main.transform.position - currentSlimeModelInstance.transform.position;
+            lookDir.y = 0;
+            if (lookDir != Vector3.zero)
+                currentSlimeModelInstance.transform.rotation = Quaternion.LookRotation(lookDir);
         }
     }
 
-    private void UpdateSlimeModel(ElementType newElementType, ElementType newStatusType)
+    /// <summary>
+    /// Troca o modelo do slime de acordo com element/status.
+    /// </summary>
+    private void UpdateSlimeModel(ElementType element, ElementType status)
     {
-        // Destrói o modelo atual, se houver
+        // Destroi o modelo atual (se existir)
         if (currentSlimeModelInstance != null)
         {
             Destroy(currentSlimeModelInstance);
             currentSlimeModelInstance = null;
         }
 
-        // Prioriza o status para a troca de modelo (ex: Quicken Slime, Burning Slime)
-        ElementType modelToDisplay = newStatusType != ElementType.None ? newStatusType : newElementType;
+        // Prioriza status (ex: Burning), se houver
+        ElementType toShow = (status != ElementType.None) ? status : element;
 
-        // Encontra o prefab do modelo correspondente ao novo elemento/status
-        GameObject modelPrefabToInstantiate = null;
-        foreach (var entry in slimeModels)
+        GameObject prefab = FindPrefabForType(toShow);
+        if (prefab == null)
         {
-            if (entry.elementType == modelToDisplay)
-            {
-                modelPrefabToInstantiate = entry.slimeModelPrefab;
-                break;
-            }
+            // tenta fallback 'None'
+            prefab = FindPrefabForType(ElementType.None);
         }
 
-        // Se encontrou um prefab, instancia-o
-        if (modelPrefabToInstantiate != null)
+        if (prefab != null)
         {
-            currentSlimeModelInstance = Instantiate(modelPrefabToInstantiate, transform);
+            // Instancia como filho direto, com transform zerado
+            currentSlimeModelInstance = Instantiate(prefab, transform);
             currentSlimeModelInstance.transform.localPosition = Vector3.zero;
-            currentSlimeModelInstance.transform.localScale = Vector3.one; // Garante escala padrão
-
-            // Ajusta a rotação para que o slime olhe para a câmera principal
-            if (Camera.main != null)
-            {
-                Vector3 lookDirection = Camera.main.transform.position - currentSlimeModelInstance.transform.position;
-                lookDirection.y = 0; // Ignora a rotação no eixo Y para não inclinar o slime
-                if (lookDirection != Vector3.zero)
-                {
-                    currentSlimeModelInstance.transform.rotation = Quaternion.LookRotation(lookDirection);
-                }
-            }
+            currentSlimeModelInstance.transform.localRotation = Quaternion.identity;
+            currentSlimeModelInstance.transform.localScale = Vector3.one;
         }
         else
         {
-            Debug.LogWarning($"Nenhum modelo de slime encontrado para o ElementType/Status: {modelToDisplay}. Usando modelo padrão (None) se disponível.");
-            // Tenta instanciar o modelo 'None' se nenhum específico for encontrado
-            foreach (var entry in slimeModels)
-            {
-                if (entry.elementType == ElementType.None)
-                {
-                    modelPrefabToInstantiate = entry.slimeModelPrefab;
-                    break;
-                }
-            }
-            if (modelPrefabToInstantiate != null)
-            {
-                currentSlimeModelInstance = Instantiate(modelPrefabToInstantiate, transform);
-                currentSlimeModelInstance.transform.localPosition = Vector3.zero;
-                currentSlimeModelInstance.transform.localScale = Vector3.one;
-
-                // Ajusta a rotação para que o slime olhe para a câmera principal
-                if (Camera.main != null)
-                {
-                    Vector3 lookDirection = Camera.main.transform.position - currentSlimeModelInstance.transform.position;
-                    lookDirection.y = 0; // Ignora a rotação no eixo Y para não inclinar o slime
-                    if (lookDirection != Vector3.zero)
-                    {
-                        currentSlimeModelInstance.transform.rotation = Quaternion.LookRotation(lookDirection);
-                    }
-                }
-            }
-            else
-            {
-                Debug.LogWarning($"Nenhum modelo padrão (None) encontrado para o slime.");
-            }
+            Debug.LogWarning($"[SlimeModelManager] Nenhum prefab encontrado para {toShow} nem fallback 'None'.");
         }
     }
 
+    private GameObject FindPrefabForType(ElementType type)
+    {
+        foreach (var e in slimeModels)
+        {
+            if (e.elementType == type) return e.slimeModelPrefab;
+        }
+        return null;
+    }
+
     /// <summary>
-    /// Método público para mudar o modelo do slime baseado no elemento selecionado
+    /// Força a troca do modelo com um elemento selecionado manualmente.
     /// </summary>
-    /// <param name="selectedElement">O elemento selecionado para aplicar ao slime</param>
     public void ChangeSlimeModel(ElementType selectedElement)
     {
-        // Força a atualização do modelo para o elemento selecionado
         UpdateSlimeModel(selectedElement, ElementType.None);
-        lastKnownElementType = selectedElement;
-        lastKnownStatusType = ElementType.None;
-        
-        Debug.Log($"Modelo do slime alterado para: {selectedElement}");
+        lastElement = selectedElement;
+        lastStatus = ElementType.None;
+        Debug.Log($"[SlimeModelManager] Modelo alterado para {selectedElement}");
     }
 }
-
-

@@ -1,33 +1,26 @@
 using UnityEngine;
 
 /// <summary>
-/// Script para gerenciar a interação com botões 3D de elementos.
-/// Deve ser anexado a cada GameObject que representa um botão elemental no modelo 3D da máquina.
+/// Script para botões 3D que interagem com o GameManager para aplicar elementos.
 /// </summary>
 public class ElementButton3D : MonoBehaviour
 {
-    /// <summary>
-    /// O tipo de elemento que este botão representa.
-    /// Atribua no Inspector da Unity para cada botão.
-    /// </summary>
-    public ElementType elementType; 
+    [Tooltip("O tipo de elemento que este botão representa.")]
+    public ElementType elementType;
 
-    /// <summary>
-    /// Chamado quando o mouse é clicado sobre este collider.
-    /// </summary>
+    [Tooltip("Referência ao GameManager na cena. Arraste o GameManager da hierarquia para este campo.")]
+    public GameManager gameManager;
+
     void OnMouseDown()
     {
-        if (GameManager.Instance != null)
+        if (gameManager != null)
         {
-            // Chama o método OnElementButtonClicked do GameManager, passando o ElementType.
-            GameManager.Instance.OnElementButtonClicked(elementType);
-            Debug.Log($"Botão 3D de {elementType} clicado.");
+            gameManager.OnElementButtonClicked((int)elementType);
+            Debug.Log($"Botão {elementType} clicado e chamada enviada ao GameManager.");
         }
         else
         {
-            Debug.LogWarning("GameManager.Instance não encontrado. Certifique-se de que o GameManager está na cena e configurado como Singleton.");
+            Debug.LogError($"[ElementButton3D] A referência ao GameManager não foi atribuída no Inspector para o botão {this.gameObject.name}!");
         }
     }
 }
-
-

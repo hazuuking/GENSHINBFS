@@ -1,283 +1,100 @@
 using UnityEngine;
 using System.Collections.Generic;
-using System.Linq;
 
 /// <summary>
-/// Gerencia a lógica principal do jogo, incluindo a aplicação de elementos ao objeto alvo,
-/// o cálculo das reações elementais e a orquestração entre os diferentes sistemas.
+/// Gerencia a lógica principal do jogo, orquestrando a aplicação de elementos e as reações.
+/// Esta versão é simplificada e funciona em conjunto com o ElementalAuraManager.
 /// </summary>
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
-
     [Header("Configuração do Alvo")]
-    [Tooltip("O objeto 3D que receberá os elementos e exibirá as auras. Deve ter um ElementalAuraManager e SlimeModelManager.")]
+    [Tooltip("O objeto 3D (slime) que receberá os elementos. Deve ser atribuído manualmente no Inspector.")]
     public GameObject targetSlimeObject;
 
-    [Header("Spawn do Slime")]
-    public Transform spawnPoint; // arraste aqui o SpawnPoint da primeira máquina
-    public GameObject slimePrefab; // arraste o prefab do slime (neutro)
-
-    [Header("Slime Spawner")]
-    [Tooltip("Reference to the SlimeSpawner component that handles slime spawning with physics")]
-    public SlimeSpawner slimeSpawner;
-
+    // Referência interna ao ElementalAuraManager do slime, obtida no Start.
     private ElementalAuraManager targetAuraManager;
-    private SlimeModelManager targetSlimeModelManager;
 
-    void Awake()
-    {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
-    }
-
+    /// <summary>
+    /// Chamado no primeiro frame em que o script está ativo.
+    /// </summary>
     void Start()
     {
-        // Find SlimeSpawner if not assigned
-        if (slimeSpawner == null)
+        // Valida e configura o objeto alvo inicial.
+        if (targetSlimeObject == null)
         {
-            slimeSpawner = FindObjectOfType<SlimeSpawner>();
-            if (slimeSpawner == null)
-            {
-                Debug.LogWarning("SlimeSpawner not found. Falling back to built-in spawn method.");
-                // Apenas spawna se não houver SlimeSpawner
-                SpawnSlime();
-            }
-            else
-            {
-                // Garantir que o GameManager não tente spawnar o slime se o SlimeSpawner já o fez
-                if (targetSlimeObject == null && slimeSpawner.GetSpawnedSlime() != null)
-                {
-                    targetSlimeObject = slimeSpawner.GetSpawnedSlime();
-                    UpdateTargetObject();
-                }
-            }
+            Debug.LogError("[GameManager] O 'Target Slime Object' não foi atribuído no Inspector! O sistema não funcionará.");
+            this.enabled = false; // Desativa o GameManager se o slime não for configurado.
+            return;
         }
-        // Não chama SpawnSlime aqui para evitar múltiplos spawns
-    }
 
-    /// <summary>
-    /// Método chamado quando um botão de elemento é clicado (e.g., na primeira máquina).
-    /// Aplica o elemento selecionado ao slime alvo.
-    /// </summary>
-    /// <param name="selectedElement">O ElementType selecionado pelo botão.</param>
-    public void OnElementButtonClicked(ElementType selectedElement)
-    {
-        if (targetAuraManager != null)
-        {
-            targetAuraManager.ApplyElement(selectedElement);
-            Debug.Log($"Elemento {selectedElement} aplicado ao slime.");
-            
-            // Muda o modelo do slime baseado no elemento selecionado
-            if (targetSlimeModelManager != null)
-            {
-                targetSlimeModelManager.ChangeSlimeModel(selectedElement);
-            }
-            
-            // Libera o slime para continuar após a seleção
-            ReleaseSlimeFromFirstMachine();
-        }
-        else
-        {
-            Debug.LogWarning("ElementalAuraManager do alvo não encontrado para aplicar elemento.");
-        }
-    }
-
-    /// <summary>
-    /// Este método é chamado quando o objeto alvo entra na área da SEGUNDA MÁQUINA.
-    /// Ele determina o elemento que melhor reage com a aura atual do slime e o aplica.
-    /// </summary>
-    public void TriggerReactionMachine()
-    {
+        // Obtém o componente ElementalAuraManager do slime alvo.
+        targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
         if (targetAuraManager == null)
         {
-            Debug.LogWarning("ElementalAuraManager do alvo não encontrado para trigger de reação.");
+            Debug.LogError($"[GameManager] O objeto {targetSlimeObject.name} não possui o componente 'ElementalAuraManager'.");
+            this.enabled = false;
             return;
         }
 
-        ElementType currentAura = targetAuraManager.currentAura;
-        ElementType currentStatus = targetAuraManager.currentStatus;
-
-        // Se não há aura ou status, não há o que reagir, então não faz nada ou aplica um elemento padrão
-        if (currentAura == ElementType.None && currentStatus == ElementType.None)
-        {
-            Debug.Log("Slime sem aura ou status. Nenhuma reação pode ser formada na segunda máquina.");
-            // Opcional: Aplicar um elemento padrão aqui se desejar que a máquina sempre faça algo
-            // targetAuraManager.ApplyElement(ElementType.Pyro); 
-            return;
-        }
-
-        ElementType bestReactingElement = ElementType.None;
-        ReactionType bestReactionType = ReactionType.None;
-
-        // Itera sobre todos os elementos base para encontrar o que gera a melhor reação
-        // Excluímos ElementType.None, Quicken, Burning, Bloom, Aggravate, Spread pois não são elementos 'incoming'
-        ElementType[] possibleIncomingElements = new ElementType[]
-        {
-            ElementType.Pyro, ElementType.Hydro, ElementType.Electro, ElementType.Cryo, ElementType.Anemo, ElementType.Geo, ElementType.Dendro
-        };
-
-        foreach (ElementType potentialElement in possibleIncomingElements)
-        {
-            ReactionType reaction = ElementalReactionLogic.GetReaction(currentAura, potentialElement, currentStatus);
-            
-            // Prioriza reações que não sejam 'None'
-            if (reaction != ReactionType.None)
-            {
-                // Lógica simples: qualquer reação é melhor que nenhuma. 
-                // Para uma lógica mais complexa (ex: priorizar dano, CC, etc.),
-                // você precisaria de um sistema de pontuação para ReactionType.
-                bestReactingElement = potentialElement;
-                bestReactionType = reaction;
-                break; // Encontrou uma reação, pode parar aqui. Ou continuar para encontrar a 'melhor' de acordo com sua regra.
-            }
-        }
-
-        if (bestReactingElement != ElementType.None)
-        {
-            Debug.Log($"Slime com aura {currentAura} e status {currentStatus}. Segunda máquina aplicando {bestReactingElement} para causar {bestReactionType}.");
-            targetAuraManager.ApplyElement(bestReactingElement);
-        }
-        else
-        {
-            Debug.Log("Nenhum elemento encontrou uma reação com a aura/status atual do slime na segunda máquina.");
-            // Opcional: Aplicar um elemento padrão ou limpar a aura se nenhuma reação for possível
-            // targetAuraManager.ApplyElement(ElementType.Pyro); 
-        }
+        // Garante que o slime comece em um estado limpo.
+        targetAuraManager.ClearAuras();
     }
 
     /// <summary>
-    /// Reseta o estado elemental do objeto alvo para 'None' e remove qualquer aura visual.
-    /// Este método é útil para testes ou para reiniciar o ciclo de aplicação de elementos.
+    /// Método chamado quando um botão de elemento (3D) é clicado na PRIMEIRA MÁQUINA.
     /// </summary>
-    public void ResetTargetSlime()
+    /// <param name="elementIndex">O índice do elemento selecionado.</param>
+    public void OnElementButtonClicked(int elementIndex)
     {
-        if (targetAuraManager != null)
+        if (targetAuraManager == null) return;
+
+        ElementType selectedElement = (ElementType)elementIndex;
+        Debug.Log($"[GameManager] Botão pressionado: {selectedElement}. Aplicando ao slime...");
+
+        // Delega a aplicação do elemento e a lógica de reação para o ElementalAuraManager.
+        targetAuraManager.ApplyElement(selectedElement);
+    }
+
+    /// <summary>
+    /// Chamado quando o objeto alvo entra na SEGUNDA MÁQUINA para acionar a reação ótima.
+    /// </summary>
+    public void TriggerOptimalReaction()
+    {
+        if (targetAuraManager == null) return;
+
+        ElementType currentElement = targetAuraManager.currentAura; // Pega o elemento atual do AuraManager
+
+        if (currentElement != ElementType.None)
         {
-            targetAuraManager.ClearAuras();
-            Debug.Log("Slime alvo resetado.");
+            ElementType bestIncomingElement = ElementType.None;
+            ReactionType bestReaction = ReactionType.None;
+            float maxEvaluation = -1.0f;
+
+            // Itera sobre todos os elementos para encontrar a melhor reação.
+            for (int i = 1; i <= (int)ElementType.Geo; i++)
+            {
+                ElementType potentialIncomingElement = (ElementType)i;
+                
+                // Simula a reação para avaliação
+                ReactionType potentialReaction = ElementalReactionLogic.GetReaction(currentElement, potentialIncomingElement, targetAuraManager.currentStatus);
+                float currentEvaluation = ReactionEvaluator.EvaluateReaction(potentialReaction);
+
+                if (currentEvaluation > maxEvaluation)
+                {
+                    maxEvaluation = currentEvaluation;
+                    bestReaction = potentialReaction;
+                    bestIncomingElement = potentialIncomingElement;
+                }
+            }
+
+            Debug.Log($"[GameManager] Slime com {currentElement}. Melhor elemento para reagir: {bestIncomingElement}. Reação: {bestReaction} (Avaliação: {maxEvaluation})");
+
+            // Aplica o melhor elemento encontrado para causar a reação ótima.
+            targetAuraManager.ApplyElement(bestIncomingElement);
         }
-        
-        // Use SlimeSpawner to respawn the slime if available
-        if (slimeSpawner != null)
+        else
         {
-            slimeSpawner.RespawnSlime();
-            Debug.Log("Slime respawned using SlimeSpawner.");
+            Debug.Log("[GameManager] Slime não possui elemento para reagir na segunda máquina.");
         }
     }
-
-    public void SpawnSlime()
-{
-    // If SlimeSpawner is available, use it instead
-    if (slimeSpawner != null)
-    {
-        // Verificar se já existe um slime no jogo
-        GameObject existingSlime = slimeSpawner.GetSpawnedSlime();
-        
-        // Se o slime já existe e ainda é válido, apenas atualiza as referências
-        if (existingSlime != null)
-        {
-            Debug.Log("Slime já existe. Apenas atualizando referências.");
-            targetSlimeObject = existingSlime;
-            UpdateTargetObject();
-            return;
-        }
-        
-        // Se não existe slime ou foi destruído, cria um novo
-        targetSlimeObject = slimeSpawner.SpawnSlime();
-        UpdateTargetObject();
-        return;
-    }
-    
-    // Fallback to original method if SlimeSpawner is not available
-    if (slimePrefab == null || spawnPoint == null)
-    {
-        Debug.LogError("SpawnPoint ou SlimePrefab não configurado no GameManager!");
-        return;
-    }
-
-    if (targetSlimeObject != null)
-    {
-        Destroy(targetSlimeObject); // remove o antigo se existir
-    }
-
-    targetSlimeObject = Instantiate(slimePrefab, spawnPoint.position, spawnPoint.rotation);
-    UpdateTargetObject();
 }
-
-/// <summary>
-/// Updates references to the target object's components
-/// </summary>
-private void UpdateTargetObject()
-{
-    if (targetSlimeObject == null) return;
-    
-    targetAuraManager = targetSlimeObject.GetComponent<ElementalAuraManager>();
-    if (targetAuraManager == null)
-    {
-        targetAuraManager = targetSlimeObject.AddComponent<ElementalAuraManager>();
-    }
-    
-    targetSlimeModelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
-    if (targetSlimeModelManager == null)
-    {
-        targetSlimeModelManager = targetSlimeObject.AddComponent<SlimeModelManager>();
-    }
-}
-
-/// <summary>
-/// Método público para atualizar os componentes do slime a partir de outros scripts
-/// </summary>
-public void UpdateTargetComponents()
-{
-    UpdateTargetObject();
-}
-
-/// <summary>
-/// Pausa o slime na primeira máquina para seleção de elemento
-/// </summary>
-public void PauseSlimeAtFirstMachine()
-{
-    if (targetSlimeObject != null)
-    {
-        Rigidbody rb = targetSlimeObject.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            // Pausa o movimento do slime
-            rb.velocity = Vector3.zero;
-            rb.angularVelocity = Vector3.zero;
-            rb.isKinematic = true;
-        }
-        
-        Debug.Log("Slime pausado na primeira máquina. Aguardando seleção de elemento.");
-    }
-}
-
-/// <summary>
-/// Libera o slime para continuar após seleção de elemento
-/// </summary>
-public void ReleaseSlimeFromFirstMachine()
-{
-    if (targetSlimeObject != null)
-    {
-        Rigidbody rb = targetSlimeObject.GetComponent<Rigidbody>();
-        if (rb != null)
-        {
-            // Libera o movimento do slime
-            rb.isKinematic = false;
-        }
-        
-        Debug.Log("Slime liberado da primeira máquina.");
-    }
-}
-
-}
-
-

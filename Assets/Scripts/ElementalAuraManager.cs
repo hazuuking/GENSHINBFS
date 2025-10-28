@@ -1,10 +1,13 @@
 using UnityEngine;
 using System.Collections.Generic;
 
+/// <summary>
+/// Controla as auras e reações elementais aplicadas ao slime.
+/// </summary>
 public class ElementalAuraManager : MonoBehaviour
 {
     public ElementType currentAura = ElementType.None;
-    public ElementType currentStatus = ElementType.None; // Para estados como Quicken, Burning, Bloom
+    public ElementType currentStatus = ElementType.None;
 
     [Header("Prefabs de VFX de Aura")]
     public GameObject pyroAuraVFXPrefab;
@@ -18,12 +21,12 @@ public class ElementalAuraManager : MonoBehaviour
     public GameObject burningAuraVFXPrefab;
     public GameObject bloomAuraVFXPrefab;
 
-    private Dictionary<ElementType, GameObject> auraVFXInstances = new Dictionary<ElementType, GameObject>();
-    private Dictionary<ElementType, GameObject> auraVFXPrefabs = new Dictionary<ElementType, GameObject>();
+    private readonly Dictionary<ElementType, GameObject> auraVFXInstances = new();
+    private readonly Dictionary<ElementType, GameObject> auraVFXPrefabs = new();
 
     void Awake()
     {
-        // Inicializa o mapa de prefabs de aura
+        // Inicializa o mapa de prefabs
         auraVFXPrefabs.Add(ElementType.Pyro, pyroAuraVFXPrefab);
         auraVFXPrefabs.Add(ElementType.Hydro, hydroAuraVFXPrefab);
         auraVFXPrefabs.Add(ElementType.Electro, electroAuraVFXPrefab);
@@ -36,15 +39,18 @@ public class ElementalAuraManager : MonoBehaviour
         auraVFXPrefabs.Add(ElementType.Bloom, bloomAuraVFXPrefab);
     }
 
+    /// <summary>
+    /// Aplica um novo elemento ao slime e verifica se há reação.
+    /// </summary>
     public void ApplyElement(ElementType incomingElement)
     {
         ElementType previousAura = currentAura;
         ElementType previousStatus = currentStatus;
 
-        // Determina a reação usando a lógica centralizada
+        // Determina reação via lógica centralizada
         ReactionType reaction = ElementalReactionLogic.GetReaction(currentAura, incomingElement, currentStatus);
 
-        // Lógica para atualizar auras e status com base na reação
+        // Atualiza estado conforme a reação
         switch (reaction)
         {
             case ReactionType.Overload:
@@ -55,29 +61,26 @@ public class ElementalAuraManager : MonoBehaviour
             case ReactionType.ElectroCharged:
             case ReactionType.Swirl:
             case ReactionType.Crystallize:
-                // Reações que consomem auras e não deixam um status persistente no alvo
                 currentAura = ElementType.None;
                 currentStatus = ElementType.None;
                 break;
+
             case ReactionType.Burning:
-                currentAura = incomingElement; // O elemento que causou Burning pode permanecer como aura
+                currentAura = incomingElement;
                 currentStatus = ElementType.Burning;
                 break;
+
             case ReactionType.Bloom:
-                currentAura = incomingElement; // O elemento que causou Bloom pode permanecer como aura
+                currentAura = incomingElement;
                 currentStatus = ElementType.Bloom;
                 break;
+
             case ReactionType.Quicken:
-                currentAura = incomingElement; // O elemento que causou Quicken pode permanecer como aura
+                currentAura = incomingElement;
                 currentStatus = ElementType.Quicken;
                 break;
-            case ReactionType.Aggravate:
-            case ReactionType.Spread:
-                // Aggravate/Spread não mudam a aura base nem o status Quicken, apenas consomem o incomingElement
-                // O status Quicken permanece
-                break;
-            case ReactionType.None:
-                // Se não houve reação, o incomingElement se torna a nova aura, limpando o status
+
+            default:
                 currentAura = incomingElement;
                 currentStatus = ElementType.None;
                 break;
@@ -85,59 +88,55 @@ public class ElementalAuraManager : MonoBehaviour
 
         UpdateAuraVFX(previousAura, previousStatus);
 
-        // Notifica o ReactionTrigger para disparar o VFX da reação, se houver
         if (ReactionTrigger.Instance != null && reaction != ReactionType.None)
-        {
             ReactionTrigger.Instance.TriggerReactionVFX(reaction, transform.position, Quaternion.identity);
-        }
     }
 
+    /// <summary>
+    /// Atualiza o VFX ativo com base na aura e status atuais.
+    /// </summary>
     private void UpdateAuraVFX(ElementType previousAura, ElementType previousStatus)
     {
-        // Desativa VFX da aura anterior
-        if (auraVFXInstances.ContainsKey(previousAura) && auraVFXInstances[previousAura] != null)
-        {
-            auraVFXInstances[previousAura].SetActive(false);
-        }
-        // Desativa VFX do status anterior
-        if (auraVFXInstances.ContainsKey(previousStatus) && auraVFXInstances[previousStatus] != null)
-        {
-            auraVFXInstances[previousStatus].SetActive(false);
-        }
+        DisableVFX(previousAura);
+        DisableVFX(previousStatus);
 
-        // Ativa VFX da nova aura
-        if (currentAura != ElementType.None && auraVFXPrefabs.ContainsKey(currentAura) && auraVFXPrefabs[currentAura] != null)
-        {
-            if (!auraVFXInstances.ContainsKey(currentAura) || auraVFXInstances[currentAura] == null)
-            {
-                auraVFXInstances[currentAura] = Instantiate(auraVFXPrefabs[currentAura], transform);
-                auraVFXInstances[currentAura].transform.localPosition = Vector3.zero;
-            }
-            auraVFXInstances[currentAura].SetActive(true);
-        }
-
-        // Ativa VFX do novo status (se houver)
-        if (currentStatus != ElementType.None && auraVFXPrefabs.ContainsKey(currentStatus) && auraVFXPrefabs[currentStatus] != null)
-        {
-            if (!auraVFXInstances.ContainsKey(currentStatus) || auraVFXInstances[currentStatus] == null)
-            {
-                auraVFXInstances[currentStatus] = Instantiate(auraVFXPrefabs[currentStatus], transform);
-                auraVFXInstances[currentStatus].transform.localPosition = Vector3.zero;
-            }
-            auraVFXInstances[currentStatus].SetActive(true);
-        }
+        EnableVFX(currentAura);
+        EnableVFX(currentStatus);
     }
 
+    private void EnableVFX(ElementType type)
+    {
+        if (type == ElementType.None || !auraVFXPrefabs.ContainsKey(type) || auraVFXPrefabs[type] == null)
+            return;
+
+        if (!auraVFXInstances.ContainsKey(type) || auraVFXInstances[type] == null)
+        {
+            auraVFXInstances[type] = Instantiate(auraVFXPrefabs[type], transform);
+            auraVFXInstances[type].transform.localPosition = Vector3.zero;
+        }
+
+        auraVFXInstances[type].SetActive(true);
+    }
+
+    private void DisableVFX(ElementType type)
+    {
+        if (auraVFXInstances.ContainsKey(type) && auraVFXInstances[type] != null)
+            auraVFXInstances[type].SetActive(false);
+    }
+
+    /// <summary>
+    /// Remove todas as auras e destrói os VFX ativos.
+    /// </summary>
     public void ClearAuras()
     {
-        foreach (var vfxInstance in auraVFXInstances.Values)
+        foreach (var vfx in auraVFXInstances.Values)
         {
-            if (vfxInstance != null) Destroy(vfxInstance); // Destruir em vez de apenas desativar para limpar completamente
+            if (vfx != null)
+                Destroy(vfx);
         }
+
         auraVFXInstances.Clear();
         currentAura = ElementType.None;
         currentStatus = ElementType.None;
     }
 }
-
-
