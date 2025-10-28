@@ -1,107 +1,103 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using UnityEngine;
+
 
 /// <summary>
-/// Gerencia as definições e a lógica para determinar as reações elementais.
+/// Classe estática que implementa a **lógica central do grafo de reações elementais**.
+/// Esta classe define as "arestas" do grafo: dado um "nó" inicial (elemento atual) e um "nó" de entrada
+/// (elemento aplicado), ela determina qual "aresta" (reação) é percorrida.
 /// </summary>
 public static class ElementalReactionLogic
 {
-    /// <summary>
-    /// Um dicionário estático que mapeia combinações de dois elementos para o tipo de reação resultante.
-    /// As chaves são Tuples de ElementType, representando as combinações de elementos.
-    /// </summary>
-    public static Dictionary<Tuple<ElementType, ElementType>, ReactionType> AllReactions { get; private set; }
+// O ReactionType é definido em ReactionEvaluator.cs.
+// Usamos o 'using static' para evitar a repetição de ReactionEvaluator.ReactionType.
+
 
     /// <summary>
-    /// Construtor estático que inicializa o dicionário AllReactions com todas as reações elementais básicas.
+    /// Calcula a reação elemental resultante da aplicação de um novo elemento (<c>incoming</c>)
+    /// sobre um objeto que já possui um elemento base (<c>current</c>).
     /// </summary>
-    static ElementalReactionLogic()
+    /// <param name="current">O elemento base que já está aplicado ao objeto (o nó de partida no grafo).</param>
+    /// <param name="incoming">O novo elemento que está sendo aplicado (o nó de destino potencial).</param>
+    /// <param name="status">Um estado elemental adicional (ex: Quicken) que pode alterar o resultado da reação.</param>
+    /// <returns>O tipo de reação (<c>ReactionType</c>) que ocorre, representando a aresta percorrida no grafo.</returns>
+    public static ReactionEvaluator.ReactionType GetReaction(ElementType current, ElementType incoming, ElementType status = ElementType.None)
     {
-        AllReactions = new Dictionary<Tuple<ElementType, ElementType>, ReactionType>
+        // ------------------------------------------------------------------------------------------------
+        // 1. Lógica para reações de segundo nível (Aggravate/Spread)
+        // Estas reações dependem de um estado prévio (Quicken) e não apenas dos dois elementos.
+        // Isso simula um caminho de reação de dois passos (Dendro + Electro -> Quicken -> Aggravate/Spread).
+        // ------------------------------------------------------------------------------------------------
+        if (status == ElementType.Quicken)
         {
-            // Reações Transformativas
-            { Tuple.Create(ElementType.Pyro, ElementType.Electro), ReactionType.Overload },
-            { Tuple.Create(ElementType.Electro, ElementType.Pyro), ReactionType.Overload },
-            { Tuple.Create(ElementType.Cryo, ElementType.Hydro), ReactionType.Freeze },
-            { Tuple.Create(ElementType.Hydro, ElementType.Cryo), ReactionType.Freeze },
-            { Tuple.Create(ElementType.Cryo, ElementType.Electro), ReactionType.Superconduct },
-            { Tuple.Create(ElementType.Electro, ElementType.Cryo), ReactionType.Superconduct },
-            { Tuple.Create(ElementType.Hydro, ElementType.Electro), ReactionType.ElectroCharged },
-            { Tuple.Create(ElementType.Electro, ElementType.Hydro), ReactionType.ElectroCharged },
-            
-            // Reações Amplificantes
-            { Tuple.Create(ElementType.Pyro, ElementType.Cryo), ReactionType.Melt },
-            { Tuple.Create(ElementType.Cryo, ElementType.Pyro), ReactionType.Melt },
-            { Tuple.Create(ElementType.Pyro, ElementType.Hydro), ReactionType.Vaporize },
-            { Tuple.Create(ElementType.Hydro, ElementType.Pyro), ReactionType.Vaporize },
-
-            // Reações Dendro (básicas)
-            { Tuple.Create(ElementType.Dendro, ElementType.Pyro), ReactionType.Burning },
-            { Tuple.Create(ElementType.Pyro, ElementType.Dendro), ReactionType.Burning },
-            { Tuple.Create(ElementType.Dendro, ElementType.Hydro), ReactionType.Bloom },
-            { Tuple.Create(ElementType.Hydro, ElementType.Dendro), ReactionType.Bloom },
-            { Tuple.Create(ElementType.Dendro, ElementType.Electro), ReactionType.Quicken },
-            { Tuple.Create(ElementType.Electro, ElementType.Dendro), ReactionType.Quicken }
-        };
-    }
-
-    /// <summary>
-    /// Determina o tipo de reação elemental que ocorre entre um elemento existente em um alvo e um elemento que está sendo aplicado.
-    /// </summary>
-    /// <param name="existingElement">O ElementType que já está aplicado ao alvo.</param>
-    /// <param name="incomingElement">O ElementType que está sendo aplicado ao alvo.</param>
-    /// <param name="currentStatus">O status elemental atual do alvo (ex: Quicken).</param>
-    /// <returns>O ReactionType resultante da combinação dos dois elementos. Retorna None se nenhuma reação ocorrer.</returns>
-    public static ReactionType GetReaction(ElementType existingElement, ElementType incomingElement, ElementType currentStatus)
-    {
-        // Lógica para reações de Intensificação (Aggravate) e Propagação (Spread).
-        // Estas reações dependem de uma aura de Aceleração (Quicken) pré-existente.
-        if (currentStatus == ElementType.Quicken)
-        {
-            if (incomingElement == ElementType.Electro)
-                return ReactionType.Aggravate;
-            if (incomingElement == ElementType.Dendro)
-                return ReactionType.Spread;
+            if (incoming == ElementType.Electro) return ReactionEvaluator.ReactionType.Aggravate;
+            if (incoming == ElementType.Dendro) return ReactionEvaluator.ReactionType.Spread;
         }
 
-        // Lógica para reações de Redemoinho (Swirl) - Anemo reage com Pyro, Hydro, Electro ou Cryo.
-        if (incomingElement == ElementType.Anemo)
+        // ------------------------------------------------------------------------------------------------
+        // 2. Lógica de Reações Elementais Primárias (Switch-Case)
+        // O switch-case simula a busca na matriz de adjacência do grafo de reações.
+        // O 'current' elemento define a linha, e o 'incoming' define a coluna.
+        // ------------------------------------------------------------------------------------------------
+        switch (current)
         {
-            if (existingElement == ElementType.Pyro || existingElement == ElementType.Hydro || 
-                existingElement == ElementType.Electro || existingElement == ElementType.Cryo)
-            {
-                return ReactionType.Swirl;
-            }
-        }
-        // Lógica para reações de Cristalização (Crystallize) - Geo reage com Pyro, Hydro, Electro, Cryo ou Dendro.
-        if (incomingElement == ElementType.Geo)
-        {
-            if (existingElement == ElementType.Pyro || existingElement == ElementType.Hydro || 
-                existingElement == ElementType.Electro || existingElement == ElementType.Cryo ||
-                existingElement == ElementType.Dendro)
-            {
-                return ReactionType.Crystallize;
-            }
+            case ElementType.Pyro:
+                // Reações iniciadas por Pyro
+                if (incoming == ElementType.Hydro) return ReactionEvaluator.ReactionType.Vaporize;
+                if (incoming == ElementType.Cryo) return ReactionEvaluator.ReactionType.Melt;
+                if (incoming == ElementType.Electro) return ReactionEvaluator.ReactionType.Overload;
+                break;
+
+            case ElementType.Hydro:
+                // Reações iniciadas por Hydro
+                // Note que Vaporize é simétrico (Pyro + Hydro = Hydro + Pyro).
+                if (incoming == ElementType.Pyro) return ReactionEvaluator.ReactionType.Vaporize; 
+                if (incoming == ElementType.Cryo) return ReactionEvaluator.ReactionType.Freeze;
+                if (incoming == ElementType.Electro) return ReactionEvaluator.ReactionType.ElectroCharged;
+                if (incoming == ElementType.Dendro) return ReactionEvaluator.ReactionType.Bloom;
+                break;
+
+            case ElementType.Cryo:
+                // Reações iniciadas por Cryo
+                // Note que Melt é simétrico (Pyro + Cryo = Cryo + Pyro).
+                if (incoming == ElementType.Pyro) return ReactionEvaluator.ReactionType.Melt;
+                if (incoming == ElementType.Hydro) return ReactionEvaluator.ReactionType.Freeze;
+                if (incoming == ElementType.Electro) return ReactionEvaluator.ReactionType.Superconduct;
+                break;
+
+            case ElementType.Electro:
+                // Reações iniciadas por Electro
+                if (incoming == ElementType.Pyro) return ReactionEvaluator.ReactionType.Overload;
+                if (incoming == ElementType.Hydro) return ReactionEvaluator.ReactionType.ElectroCharged;
+                if (incoming == ElementType.Cryo) return ReactionEvaluator.ReactionType.Superconduct;
+                if (incoming == ElementType.Dendro) return ReactionEvaluator.ReactionType.Quicken;
+                break;
+
+            case ElementType.Dendro:
+                // Reações iniciadas por Dendro
+                if (incoming == ElementType.Pyro) return ReactionEvaluator.ReactionType.Burning;
+                if (incoming == ElementType.Hydro) return ReactionEvaluator.ReactionType.Bloom;
+                if (incoming == ElementType.Electro) return ReactionEvaluator.ReactionType.Quicken;
+                break;
         }
 
-        // Tenta encontrar a reação na ordem direta (existente + entrante).
-        Tuple<ElementType, ElementType> combination1 = Tuple.Create(existingElement, incomingElement);
-        // Tenta encontrar a reação na ordem inversa (entrante + existente), pois muitas reações são simétricas.
-        Tuple<ElementType, ElementType> combination2 = Tuple.Create(incomingElement, existingElement);
-
-        if (AllReactions.ContainsKey(combination1))
+        // ------------------------------------------------------------------------------------------------
+        // 3. Lógica para reações de suporte (Anemo e Geo)
+        // Estas reações são geralmente não-simétricas e dependem apenas do elemento que está sendo aplicado.
+        // ------------------------------------------------------------------------------------------------
+        
+        // Reação de Redemoinho (Swirl): Anemo reage com qualquer elemento aplicável no alvo.
+        if (incoming == ElementType.Anemo && (current == ElementType.Pyro || current == ElementType.Hydro || current == ElementType.Cryo || current == ElementType.Electro))
         {
-            return AllReactions[combination1];
-        }
-        if (AllReactions.ContainsKey(combination2))
-        {
-            return AllReactions[combination2];
+            return ReactionEvaluator.ReactionType.Swirl;
         }
 
-        // Se nenhuma reação for encontrada, retorna None.
-        return ReactionType.None;
+        // Reação de Cristalização (Crystallize): Geo reage com qualquer elemento aplicável, exceto Anemo.
+        if (incoming == ElementType.Geo && (current != ElementType.None && current != ElementType.Anemo))
+        {
+            return ReactionEvaluator.ReactionType.Crystallize;
+        }
+
+        // Se nenhuma combinação acima for encontrada, nenhuma reação ocorre.
+        return ReactionEvaluator.ReactionType.None;
     }
 }
-
-

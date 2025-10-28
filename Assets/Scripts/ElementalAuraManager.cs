@@ -2,141 +2,99 @@ using UnityEngine;
 using System.Collections.Generic;
 
 /// <summary>
-/// Controla as auras e reações elementais aplicadas ao slime.
+/// Gerenciador de Aura Elemental (Visual Effects - VFX).
+/// Este componente é responsável por traduzir o estado lógico elemental (<c>ElementType</c>)
+/// em feedback visual para o usuário, instanciando e gerenciando o prefab de VFX
+/// correspondente ao elemento aplicado.
 /// </summary>
 public class ElementalAuraManager : MonoBehaviour
 {
+    // --- VARIÁVEIS DE ESTADO ---
+
+    /// <summary>
+    /// O <c>ElementType</c> da aura atualmente ativa no objeto.
+    /// É usado para evitar a reativação desnecessária do mesmo efeito.
+    /// </summary>
     public ElementType currentAura = ElementType.None;
+
+    /// <summary>
+    /// O <c>ElementType</c> do status elemental atual (ex: Quicken, Wet, etc.).
+    /// Usado para reações de segundo nível (ex: Aggravate/Spread em Quicken).
+    /// </summary>
     public ElementType currentStatus = ElementType.None;
 
-    [Header("Prefabs de VFX de Aura")]
-    public GameObject pyroAuraVFXPrefab;
-    public GameObject hydroAuraVFXPrefab;
-    public GameObject electroAuraVFXPrefab;
-    public GameObject cryoAuraVFXPrefab;
-    public GameObject anemoAuraVFXPrefab;
-    public GameObject geoAuraVFXPrefab;
-    public GameObject dendroAuraVFXPrefab;
-    public GameObject quickenAuraVFXPrefab;
-    public GameObject burningAuraVFXPrefab;
-    public GameObject bloomAuraVFXPrefab;
-
-    private readonly Dictionary<ElementType, GameObject> auraVFXInstances = new();
-    private readonly Dictionary<ElementType, GameObject> auraVFXPrefabs = new();
-
-    void Awake()
-    {
-        // Inicializa o mapa de prefabs
-        auraVFXPrefabs.Add(ElementType.Pyro, pyroAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Hydro, hydroAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Electro, electroAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Cryo, cryoAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Anemo, anemoAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Geo, geoAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Dendro, dendroAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Quicken, quickenAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Burning, burningAuraVFXPrefab);
-        auraVFXPrefabs.Add(ElementType.Bloom, bloomAuraVFXPrefab);
-    }
+    // --- ESTRUTURA DE DADOS (SERIALIZÁVEL) ---
 
     /// <summary>
-    /// Aplica um novo elemento ao slime e verifica se há reação.
+    /// Classe interna serializável para mapear um <c>ElementType</c> a um <c>GameObject</c> (o prefab do VFX).
+    /// Permite a configuração do mapeamento Elemento -> Efeito Visual diretamente no Inspector.
     /// </summary>
-    public void ApplyElement(ElementType incomingElement)
+    [System.Serializable]
+    public class AuraEffect
     {
-        ElementType previousAura = currentAura;
-        ElementType previousStatus = currentStatus;
-
-        // Determina reação via lógica centralizada
-        ReactionType reaction = ElementalReactionLogic.GetReaction(currentAura, incomingElement, currentStatus);
-
-        // Atualiza estado conforme a reação
-        switch (reaction)
-        {
-            case ReactionType.Overload:
-            case ReactionType.Vaporize:
-            case ReactionType.Melt:
-            case ReactionType.Freeze:
-            case ReactionType.Superconduct:
-            case ReactionType.ElectroCharged:
-            case ReactionType.Swirl:
-            case ReactionType.Crystallize:
-                currentAura = ElementType.None;
-                currentStatus = ElementType.None;
-                break;
-
-            case ReactionType.Burning:
-                currentAura = incomingElement;
-                currentStatus = ElementType.Burning;
-                break;
-
-            case ReactionType.Bloom:
-                currentAura = incomingElement;
-                currentStatus = ElementType.Bloom;
-                break;
-
-            case ReactionType.Quicken:
-                currentAura = incomingElement;
-                currentStatus = ElementType.Quicken;
-                break;
-
-            default:
-                currentAura = incomingElement;
-                currentStatus = ElementType.None;
-                break;
-        }
-
-        UpdateAuraVFX(previousAura, previousStatus);
-
-        if (ReactionTrigger.Instance != null && reaction != ReactionType.None)
-            ReactionTrigger.Instance.TriggerReactionVFX(reaction, transform.position, Quaternion.identity);
+        public ElementType elementType;
+        public GameObject vfxPrefab;
     }
+
+    // --- VARIÁVEIS PÚBLICAS (CONFIGURÁVEIS NO INSPECTOR) ---
 
     /// <summary>
-    /// Atualiza o VFX ativo com base na aura e status atuais.
+    /// Lista que armazena o mapeamento de todos os elementos e seus respectivos prefabs de VFX.
     /// </summary>
-    private void UpdateAuraVFX(ElementType previousAura, ElementType previousStatus)
-    {
-        DisableVFX(previousAura);
-        DisableVFX(previousStatus);
+    public List<AuraEffect> auraVFXPrefabs;
 
-        EnableVFX(currentAura);
-        EnableVFX(currentStatus);
-    }
-
-    private void EnableVFX(ElementType type)
-    {
-        if (type == ElementType.None || !auraVFXPrefabs.ContainsKey(type) || auraVFXPrefabs[type] == null)
-            return;
-
-        if (!auraVFXInstances.ContainsKey(type) || auraVFXInstances[type] == null)
-        {
-            auraVFXInstances[type] = Instantiate(auraVFXPrefabs[type], transform);
-            auraVFXInstances[type].transform.localPosition = Vector3.zero;
-        }
-
-        auraVFXInstances[type].SetActive(true);
-    }
-
-    private void DisableVFX(ElementType type)
-    {
-        if (auraVFXInstances.ContainsKey(type) && auraVFXInstances[type] != null)
-            auraVFXInstances[type].SetActive(false);
-    }
+    // --- VARIÁVEIS INTERNAS (PRIVADAS) ---
 
     /// <summary>
-    /// Remove todas as auras e destrói os VFX ativos.
+    /// Referência à instância atual do VFX que está ativa na cena.
+    /// É usada para destruir o efeito anterior antes de aplicar um novo.
     /// </summary>
-    public void ClearAuras()
+    private GameObject currentVFXInstance;
+
+    // --- MÉTODOS DE CONTROLE ---
+
+    /// <summary>
+    /// Define a aura elemental para o objeto.
+    /// Este é o ponto de integração entre a lógica de jogo (o elemento aplicado) e a visualização (o VFX).
+    /// </summary>
+    /// <param name="newAura">O novo <c>ElementType</c> da aura a ser aplicada.</param>
+    public void SetAura(ElementType newAura)
     {
-        foreach (var vfx in auraVFXInstances.Values)
+        // 1. Otimização: Se a aura for a mesma, sai do método.
+        if (currentAura == newAura) return; 
+
+        // 2. Limpeza: Destrói o VFX atualmente ativo para garantir que apenas um efeito esteja visível por vez.
+        if (currentVFXInstance != null)
         {
-            if (vfx != null)
-                Destroy(vfx);
+            Destroy(currentVFXInstance);
+            currentVFXInstance = null;
         }
 
-        auraVFXInstances.Clear();
-        currentAura = ElementType.None;
-        currentStatus = ElementType.None;
+        // 3. Atualiza o estado da aura.
+        currentAura = newAura;
+
+        // 4. Instanciação do Novo VFX:
+        if (currentAura != ElementType.None)
+        {
+            // Busca o mapeamento de efeito correspondente ao novo elemento.
+            AuraEffect effect = auraVFXPrefabs.Find(e => e.elementType == currentAura);
+            
+            if (effect != null && effect.vfxPrefab != null)
+            {
+                // Instancia o prefab do VFX. O novo VFX é instanciado na posição do objeto
+                // e é definido como filho do objeto (<c>transform</c>) para que se mova junto.
+                currentVFXInstance = Instantiate(effect.vfxPrefab, transform.position, Quaternion.identity, transform);
+                Debug.Log($"[ElementalAuraManager] Aura de {currentAura} ativada.");
+            }
+            else
+            {
+                Debug.LogWarning($"[ElementalAuraManager] Prefab de VFX para {currentAura} não encontrado na lista 'auraVFXPrefabs'.");
+            }
+        }
+        else
+        {
+            // Caso a nova aura seja None, apenas loga a desativação.
+            Debug.Log("[ElementalAuraManager] Aura desativada (Elemento None).");
+        }
     }
 }

@@ -1,118 +1,107 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 /// <summary>
-/// Controla a esteira transportadora:
-/// - Move a textura visualmente (efeito de rolagem)
-/// - Aplica força física em objetos com Rigidbody (para movê-los)
-/// - Adiciona resistência para manter velocidade estável e evitar deslize infinito
+/// Componente responsável pela simulação da esteira transportadora.
+/// Controla o movimento dos objetos que entram em seu <c>Trigger Collider</c>,
+/// aplicando uma força constante. O controle de movimento do Slime é centralizado
+/// no <c>GameManager</c> através da variável <c>canSlimeMove</c>, implementando
+/// um sistema de estado de máquina simples (parado/movendo).
 /// </summary>
-[RequireComponent(typeof(Collider))]
-[RequireComponent(typeof(Renderer))]
 public class ConveyorBeltController : MonoBehaviour
 {
-    [Header("Configurações de Movimento Visual")]
-    [Tooltip("Velocidade de rolagem da textura (efeito visual).")]
-    public float scrollSpeed = 0.5f;
+    // --- VARIÁVEIS PÚBLICAS (CONFIGURÁVEIS NO INSPECTOR) ---
 
-    [Tooltip("Direção da textura e movimento físico da esteira (X = horizontal, Y = para frente).")]
-    public Vector2 scrollDirection = new Vector2(0, 1);
+    /// <summary>
+    /// <c>[Tooltip]</c> A taxa de velocidade constante aplicada aos objetos na esteira.
+    /// </summary>
+    [Tooltip("A velocidade com que a esteira move os objetos.")]
+    public float moveSpeed = 1.0f;
 
-    [Header("Configurações Físicas")]
-    [Tooltip("Força aplicada ao objeto para empurrá-lo na direção da esteira.")]
-    public float conveyorForce = 8f;
+    /// <summary>
+    /// <c>[Tooltip]</c> A direção do movimento no espaço local da esteira.
+    /// <c>transform.TransformDirection</c> será usado para converter isso para o espaço global.
+    /// </summary>
+    [Tooltip("A direção do movimento no eixo local da esteira. (0,0,1) significa para a frente.")]
+    public Vector3 moveDirection = new Vector3(0, 0, 1);
 
-    [Tooltip("Velocidade-alvo que o objeto deve manter sobre a esteira.")]
-    public float targetSpeed = 4f;
+    // --- REFERÊNCIAS INTERNAS (PRIVADAS) ---
 
-    [Tooltip("Fator de resistência para desacelerar o objeto quando sai da esteira.")]
-    public float damping = 2f;
+    /// <summary>
+    /// Lista de <c>Rigidbody</c>s de todos os objetos atualmente dentro da área de influência da esteira.
+    /// O uso de uma lista permite rastrear múltiplos objetos, embora apenas o Slime seja movido.
+    /// </summary>
+    private List<Rigidbody> objectsOnBelt = new List<Rigidbody>();
 
-    private Renderer beltRenderer;
-    private Collider beltCollider;
+    /// <summary>
+    /// Referência ao <c>GameManager</c> para consultar a permissão de movimento do Slime.
+    /// </summary>
+    private GameManager gameManager;
 
+    // --- MÉTODOS DO UNITY ---
+
+    /// <summary>
+    /// Chamado no início da cena.
+    /// </summary>
     void Start()
     {
-        // Obtém o Renderer (pra animar textura)
-        beltRenderer = GetComponent<Renderer>();
-        if (beltRenderer == null)
+        // Busca a referência do GameManager para sincronizar o movimento do Slime.
+        gameManager = FindObjectOfType<GameManager>();
+        if (gameManager == null)
         {
-            Debug.LogError("ConveyorBeltController requer um Renderer no mesmo GameObject!");
-            enabled = false;
-            return;
+            Debug.LogError("[ConveyorBeltController] GameManager não encontrado na cena! O controle de movimento do Slime será ignorado.");
         }
-
-        // Obtém o Collider e garante que NÃO é um trigger
-        beltCollider = GetComponent<Collider>();
-        if (beltCollider == null)
-        {
-            Debug.LogError("ConveyorBeltController requer um Collider no mesmo GameObject!");
-            enabled = false;
-            return;
-        }
-
-        // Importante: NÃO é trigger para permitir colisão física
-        beltCollider.isTrigger = false;
-        
-        // Adiciona um segundo collider como trigger para detectar o slime
-        BoxCollider triggerCollider = gameObject.AddComponent<BoxCollider>();
-        triggerCollider.isTrigger = true;
-        triggerCollider.size = beltCollider.bounds.size * 1.1f; // Ligeiramente maior
     }
 
-    void Update()
+    /// <summary>
+    /// Chamado quando um objeto entra na área do trigger da esteira.
+    /// </summary>
+    /// <param name="other">O <c>Collider</c> do objeto que entrou.</param>
+    void OnTriggerEnter(Collider other)
     {
-        // Move a textura para dar a sensação de movimento
-        float offsetU = Time.time * scrollSpeed * scrollDirection.x;
-        float offsetV = Time.time * scrollSpeed * scrollDirection.y;
-        beltRenderer.material.SetTextureOffset("_MainTex", new Vector2(offsetU, offsetV));
-    }
-
-    // Detecta colisão física com o collider não-trigger
-    void OnCollisionStay(Collision collision)
-    {
-        Rigidbody rb = collision.rigidbody;
-
-        if (rb != null && !rb.isKinematic)
+        // Tenta obter o componente Rigidbody. O movimento da esteira deve ser aplicado
+        // via manipulação de Rigidbody para interagir corretamente com o sistema de física.
+        Rigidbody rb = other.GetComponent<Rigidbody>();
+        if (rb != null && !objectsOnBelt.Contains(rb))
         {
-            // Direção local da esteira (usando orientação do objeto)
-            Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
-
-            // Esteira em contato com objeto
-
-            // Aceleração robusta na direção da esteira baseada na diferença de velocidade
-            float currentAlong = Vector3.Dot(rb.velocity, moveDir);
-            float delta = targetSpeed - currentAlong;
-            // Muda a velocidade instantaneamente na componente da direção
-            rb.AddForce(moveDir * delta, ForceMode.VelocityChange);
-
-            // Leve sustentação para evitar afundar na esteira
-            rb.AddForce(Vector3.up * 0.5f, ForceMode.Acceleration);
-        }
-    }
-    
-    // Ainda mantém o trigger para detecção adicional
-    void OnTriggerStay(Collider other)
-    {
-        Rigidbody rb = other.attachedRigidbody;
-
-        if (rb != null && !rb.isKinematic)
-        {
-            // Direção local da esteira (usando orientação do objeto)
-            Vector3 moveDir = (transform.right * scrollDirection.x + transform.forward * scrollDirection.y).normalized;
-            
-            // Apoio mínimo: só um leve empurrão caso a colisão esteja instável
-            rb.AddForce(moveDir * (conveyorForce * 0.25f), ForceMode.Acceleration);
+            objectsOnBelt.Add(rb);
         }
     }
 
+    /// <summary>
+    /// Chamado quando um objeto sai da área do trigger da esteira.
+    /// </summary>
+    /// <param name="other">O <c>Collider</c> do objeto que saiu.</param>
     void OnTriggerExit(Collider other)
     {
-        // Quando o slime sai da esteira, ele perde o empurrão
-        Rigidbody rb = other.attachedRigidbody;
-        if (rb != null && !rb.isKinematic)
+        Rigidbody rb = other.GetComponent<Rigidbody>();
+        if (rb != null)
         {
-            // Suaviza pra ele parar aos poucos
-            rb.velocity *= 0.5f;
+            objectsOnBelt.Remove(rb);
+        }
+    }
+
+    /// <summary>
+    /// Chamado a cada passo de física (taxa fixa). É o local ideal para aplicar forças ou
+    /// manipular a posição de <c>Rigidbody</c>s, garantindo estabilidade física.
+    /// </summary>
+    void FixedUpdate()
+    {
+        // 1. Verificação de Estado: O movimento só é aplicado se o GameManager permitir (canSlimeMove = true).
+        if (gameManager != null && gameManager.canSlimeMove)
+        {
+            // 2. Itera sobre todos os objetos na esteira.
+            foreach (Rigidbody rb in objectsOnBelt)
+            {
+                // 3. Filtragem: Aplica o movimento *apenas* ao Slime alvo, ignorando outros objetos.
+                if(rb.gameObject == gameManager.targetSlimeObject)
+                {
+                    // Cálculo do Movimento: Aplica o deslocamento diretamente à posição do Rigidbody.
+                    // Isso simula o movimento da esteira de forma cinemática.
+                    Vector3 worldMoveDirection = transform.TransformDirection(moveDirection);
+                    rb.position += worldMoveDirection * moveSpeed * Time.fixedDeltaTime;
+                }
+            }
         }
     }
 }

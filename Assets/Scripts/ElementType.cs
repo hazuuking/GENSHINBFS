@@ -1,54 +1,46 @@
 /// <summary>
-/// Define os tipos de elementos disponíveis no Genshin Impact.
-/// Cada membro representa um elemento elemental que pode ser aplicado a um objeto ou personagem.
+/// Define os tipos de elementos fundamentais (Element Type) que compõem o sistema de reações elementais,
+/// em conformidade com o modelo do jogo Genshin Impact.
+/// Este enum serve como a base para todas as operações de lógica elemental e de grafo.
 /// </summary>
 public enum ElementType
 {
     /// <summary>
-    /// Representa a ausência de um elemento. Usado para o estado inicial de um objeto ou para indicar que nenhum elemento está aplicado.
+    /// Representa a ausência de um elemento. É o estado inicial de qualquer objeto ou
+    /// o elemento de "vazio" necessário para certas verificações lógicas.
     /// </summary>
     None = 0,
     /// <summary>
-    /// Elemento Pyro (Fogo).
+    /// Elemento Pyro (Fogo). Base para reações como Sobrecarga e Fusão.
     /// </summary>
     Pyro = 1,
     /// <summary>
-    /// Elemento Hydro (Água).
+    /// Elemento Hydro (Água). Base para reações como Eletrificação e Vaporização.
     /// </summary>
     Hydro = 2,
     /// <summary>
-    /// Elemento Anemo (Vento).
+    /// Elemento Anemo (Vento). Elemento de suporte, primariamente envolvido na reação de Redemoinho.
     /// </summary>
     Anemo = 3,
     /// <summary>
-    /// Elemento Electro (Eletricidade).
+    /// Elemento Electro (Eletricidade). Base para reações como Sobrecarga e Eletrificação.
     /// </summary>
     Electro = 4,
     /// <summary>
-    /// Elemento Dendro (Natureza).
+    /// Elemento Dendro (Natureza). Elemento central para as reações de Catalisação.
     /// </summary>
     Dendro = 5,
     /// <summary>
-    /// Elemento Cryo (Gelo).
+    /// Elemento Cryo (Gelo). Base para reações como Fusão e Supercondução.
     /// </summary>
     Cryo = 6,
     /// <summary>
-    /// Elemento Geo (Terra).
+    /// Elemento Geo (Terra). Elemento de suporte, primariamente envolvido na reação de Cristalização.
     /// </summary>
     Geo = 7,
     /// <summary>
-    /// Representa o estado Quicken, que é um status elemental e não um elemento base. 
-    /// Usado para lógica de reações como Aggravate e Spread.
+    /// Estado Quicken (Catalisação). Não é um elemento, mas um estado intermediário
+    /// necessário para a lógica de reações de segundo nível (Aggravate/Spread).
     /// </summary>
-    Quicken = 8,
-    /// <summary>
-    /// Representa o estado Burning, um status elemental de dano contínuo.
-    /// </summary>
-    Burning = 9,
-    /// <summary>
-    /// Representa o estado Bloom, que gera Dendro Cores.
-    /// </summary>
-    Bloom = 10
+    Quicken = 8
 }
-
-
