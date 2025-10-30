@@ -94,7 +94,9 @@ public class ConveyorBeltController : MonoBehaviour
             foreach (Rigidbody rb in objectsOnBelt)
             {
                 // 3. Filtragem: Aplica o movimento *apenas* ao Slime alvo, ignorando outros objetos.
-                if(rb.gameObject == gameManager.targetSlimeObject)
+                // Considera colliders/rigidbodies em filhos do slime (modelos instanciados).
+                GameObject rbRoot = rb.transform.root.gameObject;
+                if (rbRoot == gameManager.targetSlimeObject)
                 {
                     // Cálculo do Movimento: Aplicar movimento como velocidade para evitar "teleporte" de posição,
                     // reduzindo explosões de física e ejeções inesperadas.
@@ -123,7 +125,9 @@ public class ConveyorBeltController : MonoBehaviour
         if (gameManager == null || !gameManager.canSlimeMove)
             return;
 
-        if (collision.gameObject != gameManager.targetSlimeObject)
+        // Aceita colisões vindas de filhos do slime (ex.: prefab visual com collider).
+        GameObject colRoot = collision.transform.root.gameObject;
+        if (colRoot != gameManager.targetSlimeObject)
             return;
 
         Rigidbody rb = collision.rigidbody != null ? collision.rigidbody : collision.gameObject.GetComponent<Rigidbody>();

@@ -51,13 +51,20 @@ public class MachineTrigger : MonoBehaviour
     {
         // 1. Verificação de Pré-condições: Garante que o GameManager existe e que o objeto
         // que entrou no trigger é o Slime alvo (identificado pelo GameManager).
-        if (gameManager != null && other.gameObject == gameManager.targetSlimeObject)
+        if (gameManager != null)
         {
+            // Usa root para aceitar colliders de filhos do slime.
+            GameObject otherRoot = other.transform.root.gameObject;
+            if (otherRoot == gameManager.targetSlimeObject)
+            {
             // 2. Notificação do Evento: Chama o método de manipulação de evento no GameManager,
             // passando o ID desta máquina. O GameManager usará este ID para determinar
             // a ação apropriada (ex: parar o Slime na Máquina 1 e esperar input, ou
             // executar a lógica de reação na Máquina 2).
             gameManager.OnMachineEnter(machineID);
+            }
         }
     }
 }
+
+

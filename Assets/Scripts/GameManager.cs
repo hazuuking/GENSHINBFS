@@ -201,5 +201,6 @@ public class GameManager : MonoBehaviour
     private void ResumeSlimeMovement()
     {
         canSlimeMove = true;
+        Debug.Log("[GameManager] Movimento do slime retomado (canSlimeMove = true).");
     }
 }
