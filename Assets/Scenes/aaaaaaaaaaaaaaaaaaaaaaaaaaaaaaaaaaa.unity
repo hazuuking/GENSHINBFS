@@ -924,7 +924,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85806ba7813769f43a7de21c64d1a30b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 0.2
+  moveSpeed: 0.01
   moveDirection: {x: 1, y: 0, z: 0}
 --- !u!65 &1941772832
 BoxCollider:
@@ -959,7 +959,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85806ba7813769f43a7de21c64d1a30b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 0.2
+  moveSpeed: 0.01
   moveDirection: {x: 1, y: 0, z: 0}
 --- !u!114 &1941772840
 MonoBehaviour:
