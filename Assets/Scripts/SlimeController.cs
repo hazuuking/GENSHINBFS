@@ -42,6 +42,8 @@ public class SlimeController : MonoBehaviour
         // Estabilidade: aumentar amortecimento rotacional e congelar rotações X/Z para evitar tombos
         rb.angularDrag = 2.0f;
         rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        // Amortecimento linear moderado para reduzir oscilações
+        rb.drag = 1.5f;
 
         // 2. Configuração do Collider:
         // Garante que o Slime tenha um Collider para interagir fisicamente.

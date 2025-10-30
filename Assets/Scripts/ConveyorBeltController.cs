@@ -113,4 +113,32 @@ public class ConveyorBeltController : MonoBehaviour
             }
         }
     }
+
+    /// <summary>
+    /// Movimento aplicado durante contato sólido com a esteira.
+    /// Usa colisão direta para cenários onde não há Trigger configurado.
+    /// </summary>
+    void OnCollisionStay(Collision collision)
+    {
+        if (gameManager == null || !gameManager.canSlimeMove)
+            return;
+
+        if (collision.gameObject != gameManager.targetSlimeObject)
+            return;
+
+        Rigidbody rb = collision.rigidbody != null ? collision.rigidbody : collision.gameObject.GetComponent<Rigidbody>();
+        if (rb == null) return;
+
+        // Direção e velocidade alvo da esteira
+        Vector3 worldMoveDirection = transform.TransformDirection(moveDirection).normalized;
+        Vector3 targetHorizontalVelocity = worldMoveDirection * moveSpeed;
+
+        // Suaviza velocidade horizontal do slime para coincidir com a da esteira
+        Vector3 currentVel = rb.velocity;
+        Vector3 currentHorizontal = new Vector3(currentVel.x, 0f, currentVel.z);
+        Vector3 newHorizontal = Vector3.Lerp(currentHorizontal, targetHorizontalVelocity, 0.35f);
+
+        // Em contato com a esteira, zera componente vertical para evitar "voos" involuntários
+        rb.velocity = new Vector3(newHorizontal.x, 0f, newHorizontal.z);
+    }
 }
