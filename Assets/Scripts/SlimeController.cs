@@ -54,6 +54,18 @@ public class SlimeController : MonoBehaviour
         }
         col.isTrigger = false; // Deve ser um Collider sólido para detectar colisão.
 
+        // Material físico "grudento" para aumentar aderência na esteira
+        if (col.material == null)
+        {
+            var sticky = new PhysicMaterial("SlimeStickyPhysicMaterial");
+            sticky.dynamicFriction = 0.9f;
+            sticky.staticFriction = 0.95f;
+            sticky.frictionCombine = PhysicMaterialCombine.Maximum;
+            sticky.bounciness = 0f;
+            sticky.bounceCombine = PhysicMaterialCombine.Minimum;
+            col.material = sticky;
+        }
+
         // 3. Força a atualização do sistema de física.
         Physics.SyncTransforms();
         rb.WakeUp();
@@ -85,6 +97,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = true;
+            // Congela a posição Y enquanto estiver sobre a esteira para evitar saltos
+            rb.constraints |= RigidbodyConstraints.FreezePositionY;
             Debug.Log("[SlimeController] Slime pousou na esteira!");
         }
     }
@@ -99,6 +113,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = false;
+            // Libera a posição Y quando sair da esteira
+            rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
             Debug.Log("[SlimeController] Slime saiu da esteira!");
         }
     }
