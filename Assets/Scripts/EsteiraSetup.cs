@@ -28,6 +28,18 @@ public class EsteiraSetup : MonoBehaviour
         // A esteira deve ter um Collider sólido (não-Trigger) para que o Slime
         // possa pousar sobre ela e disparar eventos de colisão (OnCollisionEnter).
         col.isTrigger = false;
+        
+        // Material físico para alta fricção e zero quique
+        if (col.material == null)
+        {
+            var beltPhysicMaterial = new PhysicMaterial("BeltPhysicMaterial");
+            beltPhysicMaterial.dynamicFriction = 0.9f;
+            beltPhysicMaterial.staticFriction = 0.9f;
+            beltPhysicMaterial.frictionCombine = PhysicMaterialCombine.Maximum;
+            beltPhysicMaterial.bounciness = 0f;
+            beltPhysicMaterial.bounceCombine = PhysicMaterialCombine.Minimum;
+            col.material = beltPhysicMaterial;
+        }
 
         // 3. Configuração do Rigidbody:
         Rigidbody rb = GetComponent<Rigidbody>();

@@ -39,6 +39,10 @@ public class SlimeController : MonoBehaviour
         // Detecção de colisão contínua para evitar que o Slime "atravesse" objetos em alta velocidade.
         rb.collisionDetectionMode = CollisionDetectionMode.Continuous; 
 
+        // Estabilidade: aumentar amortecimento rotacional e congelar rotações X/Z para evitar tombos
+        rb.angularDrag = 2.0f;
+        rb.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+
         // 2. Configuração do Collider:
         // Garante que o Slime tenha um Collider para interagir fisicamente.
         Collider col = GetComponent<Collider>();

@@ -96,10 +96,19 @@ public class ConveyorBeltController : MonoBehaviour
                 // 3. Filtragem: Aplica o movimento *apenas* ao Slime alvo, ignorando outros objetos.
                 if(rb.gameObject == gameManager.targetSlimeObject)
                 {
-                    // Cálculo do Movimento: Aplica o deslocamento diretamente à posição do Rigidbody.
-                    // Isso simula o movimento da esteira de forma cinemática.
-                    Vector3 worldMoveDirection = transform.TransformDirection(moveDirection);
-                    rb.position += worldMoveDirection * moveSpeed * Time.fixedDeltaTime;
+                    // Cálculo do Movimento: Aplicar movimento como velocidade para evitar "teleporte" de posição,
+                    // reduzindo explosões de física e ejeções inesperadas.
+                    Vector3 worldMoveDirection = transform.TransformDirection(moveDirection).normalized;
+                    Vector3 targetHorizontalVelocity = worldMoveDirection * moveSpeed;
+
+                    // Suaviza a transição da velocidade atual para a velocidade da esteira
+                    Vector3 currentVel = rb.velocity;
+                    Vector3 currentHorizontal = new Vector3(currentVel.x, 0f, currentVel.z);
+                    Vector3 newHorizontal = Vector3.Lerp(currentHorizontal, targetHorizontalVelocity, 0.25f);
+
+                    // Mantém componente vertical estável, evitando empurrões para cima.
+                    float newY = Mathf.Max(currentVel.y, 0f);
+                    rb.velocity = new Vector3(newHorizontal.x, newY, newHorizontal.z);
                 }
             }
         }
