@@ -250,23 +250,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   slimeModels:
   - elementType: 0
-    slimeModelPrefab: {fileID: 7777425900315886649, guid: a67faf0d590fa4f47a86938c49e86e48, type: 3}
+    slimeModelPrefab: {fileID: 1509078137096413651, guid: a3dab2e7641d36348ac47740a96f6122, type: 3}
   - elementType: 1
-    slimeModelPrefab: {fileID: 894307285537711516, guid: 15004240176ef034e9472fcb0c80f938, type: 3}
+    slimeModelPrefab: {fileID: 7575353730376734160, guid: 15004240176ef034e9472fcb0c80f938, type: 3}
   - elementType: 2
-    slimeModelPrefab: {fileID: 3456844239391310712, guid: b61340ae2845bf84d8298aff9f21498a, type: 3}
+    slimeModelPrefab: {fileID: 6278890312738497981, guid: b61340ae2845bf84d8298aff9f21498a, type: 3}
   - elementType: 3
-    slimeModelPrefab: {fileID: 344012410833533863, guid: 270f201f33f06104db1f9ff93d923ec4, type: 3}
+    slimeModelPrefab: {fileID: 8676078217242265988, guid: 270f201f33f06104db1f9ff93d923ec4, type: 3}
   - elementType: 4
-    slimeModelPrefab: {fileID: 516098468324683245, guid: 1b70c2b130c89df4c81204a29fa32fbf, type: 3}
+    slimeModelPrefab: {fileID: 1953898821595912141, guid: 1b70c2b130c89df4c81204a29fa32fbf, type: 3}
   - elementType: 4
-    slimeModelPrefab: {fileID: 4599108834298828302, guid: ed58aec36d75d034d84344b6ba1371f2, type: 3}
+    slimeModelPrefab: {fileID: 5799492386914834649, guid: e462b8ab50c422b4ea267459f4fcfd24, type: 3}
   - elementType: 5
-    slimeModelPrefab: {fileID: 9105978856553883946, guid: 80e4223ff41abbd418f553b5682ef778, type: 3}
+    slimeModelPrefab: {fileID: 1854183043261778238, guid: 80e4223ff41abbd418f553b5682ef778, type: 3}
   - elementType: 6
-    slimeModelPrefab: {fileID: 2846237654294532405, guid: ca1f306b8df3d0946a4d12207d04c1b3, type: 3}
+    slimeModelPrefab: {fileID: 2002036294633244940, guid: ca1f306b8df3d0946a4d12207d04c1b3, type: 3}
   - elementType: 7
-    slimeModelPrefab: {fileID: 2619025896066219384, guid: 4bfc3b780c52c874c8d371b6b2eb7944, type: 3}
+    slimeModelPrefab: {fileID: 8407657176283071827, guid: 4bfc3b780c52c874c8d371b6b2eb7944, type: 3}
   auraManager: {fileID: 362178543}
 --- !u!114 &362178543
 MonoBehaviour:
@@ -306,7 +306,7 @@ Transform:
   m_GameObject: {fileID: 362178539}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.09, y: 1.85, z: 6.93}
+  m_LocalPosition: {x: -5.29, y: 1.651, z: 7.17}
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 1
   m_Children: []
@@ -688,7 +688,7 @@ Transform:
   m_GameObject: {fileID: 1398460876}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.84, y: 3.34, z: -3.01}
+  m_LocalPosition: {x: -0.76, y: 3.34, z: -0.14}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -924,7 +924,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85806ba7813769f43a7de21c64d1a30b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 0.2
+  moveSpeed: 1
   moveDirection: {x: 1, y: 0, z: 0}
 --- !u!65 &1941772832
 BoxCollider:
@@ -959,7 +959,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 85806ba7813769f43a7de21c64d1a30b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  moveSpeed: 0.2
+  moveSpeed: 1
   moveDirection: {x: 1, y: 0, z: 0}
 --- !u!114 &1941772840
 MonoBehaviour:
