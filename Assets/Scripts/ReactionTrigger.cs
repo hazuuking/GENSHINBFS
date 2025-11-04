@@ -20,20 +20,13 @@ public class ReactionTrigger : MonoBehaviour
     public GameObject aggravateVFXPrefab;
     public GameObject spreadVFXPrefab;
 
-    // Dicionário para mapear tipos de reação a prefabs de VFX
     private Dictionary<ReactionType, GameObject> reactionVFXMap;
 
     void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-        }
-        else
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance == null) Instance = this;
+        else { Destroy(gameObject); return; }
+
         InitializeReactionMap();
     }
 
@@ -57,50 +50,27 @@ public class ReactionTrigger : MonoBehaviour
         };
     }
 
-    // Este método será chamado pelo ElementalAuraManager quando uma reação for determinada
     public void TriggerReactionVFX(ReactionType reaction, Vector3 position, Quaternion rotation)
     {
-        if (reactionVFXMap.TryGetValue(reaction, out GameObject vfxPrefab))
+        if (reactionVFXMap.TryGetValue(reaction, out GameObject vfxPrefab) && vfxPrefab != null)
         {
-            if (vfxPrefab != null)
-            {
-                // Usar ObjectPoolManager se estiver configurado
-                GameObject vfxInstance = null;
-                if (ObjectPoolManager.Instance != null)
-                {
-                    vfxInstance = ObjectPoolManager.Instance.SpawnFromPool(reaction.ToString(), position, rotation);
-                }
-                else
-                {
-                    vfxInstance = Instantiate(vfxPrefab, position, rotation);
-                }
+            GameObject vfxInstance = null;
 
-                if (vfxInstance != null)
-                {
-                    ElementalReactionVFX vfxController = vfxInstance.GetComponent<ElementalReactionVFX>();
-                    if (vfxController != null)
-                    {
-                        // O Activate já é chamado pelo SpawnFromPool que ativa o GameObject
-                        // Se o VFX for contínuo e precisar ser desativado manualmente, não defina effectDuration
-                        // e chame vfxController.Deactivate() quando apropriado.
-                        // Para efeitos de curta duração, o ElementalReactionVFX já gerencia a desativação.
-                    }
-                    else
-                    {
-                        Debug.LogWarning($"Prefab {reaction.ToString()} não possui o script ElementalReactionVFX.");
-                    }
-                }
-            }
+            if (ObjectPoolManager.Instance != null)
+                vfxInstance = ObjectPoolManager.Instance.SpawnFromPool(reaction.ToString(), position, rotation);
             else
+                vfxInstance = Instantiate(vfxPrefab, position, rotation);
+
+            if (vfxInstance != null)
             {
-                Debug.LogWarning($"Prefab de VFX para {reaction.ToString()} não atribuído no Inspector.");
+                var vfxController = vfxInstance.GetComponent<ElementalReactionVFX>();
+                if (vfxController == null)
+                    Debug.LogWarning($"Prefab {reaction} não possui o script ElementalReactionVFX.");
             }
         }
         else
         {
-            Debug.LogWarning($"Reação {reaction.ToString()} não encontrada no mapa de VFX.");
+            Debug.LogWarning($"Prefab de VFX para {reaction} não encontrado ou não atribuído.");
         }
     }
 }
-
-

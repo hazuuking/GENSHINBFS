@@ -106,5 +106,3 @@ public class ObjectPoolManager : MonoBehaviour
         poolDictionary[tag].Enqueue(objectToReturn);
     }
 }
-
-

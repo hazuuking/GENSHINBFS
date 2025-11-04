@@ -64,5 +64,3 @@ public enum ReactionType
     /// </summary>
     Spread
 }
-
-
