@@ -36,8 +36,9 @@ public class SlimeController : MonoBehaviour
         rb.isKinematic = false;         // O Slime é um objeto dinâmico, movido por forças ou manipulação de posição.
         // Interpolação para suavizar o movimento, importante quando a posição é manipulada no FixedUpdate (pelo ConveyorBeltController).
         rb.interpolation = RigidbodyInterpolation.Interpolate; 
-        // Detecção de colisão contínua para evitar que o Slime "atravesse" objetos em alta velocidade.
-        rb.collisionDetectionMode = CollisionDetectionMode.Continuous; 
+        // Detecção de colisão discreta como padrão. A detecção contínua pode ser ativada se o Slime
+        // atravessar a esteira em alta velocidade, mas é mais custosa.
+        rb.collisionDetectionMode = CollisionDetectionMode.Discrete; 
 
         // Estabilidade: aumentar amortecimento rotacional e congelar rotações X/Z para evitar tombos
         rb.angularDrag = 2.0f;
@@ -71,21 +72,7 @@ public class SlimeController : MonoBehaviour
         rb.WakeUp();
     }
 
-    /// <summary>
-    /// <c>Update()</c>: Chamado a cada frame.
-    /// Usado para aplicar correções de estabilidade vertical.
-    /// </summary>
-    void Update()
-    {
-        // Correção de Estabilidade: Quando o Slime está na esteira, sua velocidade vertical (eixo Y)
-        // deve ser zerada se for negativa (caindo), para evitar que ele afunde na esteira
-        // devido a imprecisões do motor de física.
-        if (onEsteira && rb.velocity.y <= 0)
-        {
-            // Mantém as velocidades horizontais (X e Z) e zera a vertical (Y).
-            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
-        }
-    }
+
 
     /// <summary>
     /// <c>OnCollisionEnter()</c>: Chamado quando o Slime entra em contato com outro Collider sólido.
@@ -97,8 +84,7 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = true;
-            // Congela a posição Y enquanto estiver sobre a esteira para evitar saltos
-            rb.constraints |= RigidbodyConstraints.FreezePositionY;
+
             Debug.Log("[SlimeController] Slime pousou na esteira!");
         }
     }
@@ -113,8 +99,7 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = false;
-            // Libera a posição Y quando sair da esteira
-            rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
+
             Debug.Log("[SlimeController] Slime saiu da esteira!");
         }
     }
