@@ -72,7 +72,6 @@ public class SlimeController : MonoBehaviour
         rb.WakeUp();
     }
 
-<<<<<<< HEAD
     /// <summary>
     /// <c>Update()</c>: Chamado a cada frame.
     /// Usado para aplicar correções de estabilidade vertical.
