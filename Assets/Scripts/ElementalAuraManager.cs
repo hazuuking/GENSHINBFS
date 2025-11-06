@@ -84,17 +84,7 @@ public class ElementalAuraManager : MonoBehaviour
                 // Instancia o prefab do VFX. O novo VFX é instanciado na posição do objeto
                 // e é definido como filho do objeto (<c>transform</c>) para que se mova junto.
                 currentVFXInstance = Instantiate(effect.vfxPrefab, transform.position, Quaternion.identity, transform);
-                Debug.Log($"[ElementalAuraManager] Aura de {currentAura} ativada.");
             }
-            else
-            {
-                Debug.LogWarning($"[ElementalAuraManager] Prefab de VFX para {currentAura} não encontrado na lista 'auraVFXPrefabs'.");
-            }
-        }
-        else
-        {
-            // Caso a nova aura seja None, apenas loga a desativação.
-            Debug.Log("[ElementalAuraManager] Aura desativada (Elemento None).");
         }
     }
 }

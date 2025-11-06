@@ -58,20 +58,38 @@ public class GameManager : MonoBehaviour
 
         targetAuraManager.SetAura(selectedElement);
         ResumeSlimeMovement();
-        Debug.Log($"[GameManager] Elemento {selectedElement} aplicado. Slime liberado para se mover da Máquina 1.");
+        Debug.Log("[GameManager] Slime liberado.");
     }
 
     public void OnMachineEnter(int machineID)
     {
         if (machineID == 1)
         {
-            Debug.Log("[GameManager] Slime entrou na Máquina 1. Movimento parado, aguardando seleção de elemento.");
+            Debug.Log("[GameManager] Slime entrou na Máquina 1.");
             StopSlimeMovement();
+            // Permite mudança de modelo na primeira máquina
+            if (targetSlimeObject != null)
+            {
+                SlimeModelManager modelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+                if (modelManager != null)
+                {
+                    modelManager.allowModelChange = true;
+                }
+            }
         }
         else if (machineID == 2)
         {
-            Debug.Log("[GameManager] Slime entrou na Máquina 2. Movimento parado permanentemente. Acionando lógica de reação ótima.");
+            Debug.Log("[GameManager] Slime entrou na Máquina 2.");
             StopSlimeMovement();
+            // Impede mudança de modelo na segunda máquina
+            if (targetSlimeObject != null)
+            {
+                SlimeModelManager modelManager = targetSlimeObject.GetComponent<SlimeModelManager>();
+                if (modelManager != null)
+                {
+                    modelManager.allowModelChange = false;
+                }
+            }
             TriggerOptimalReaction();
         }
     }
@@ -109,6 +127,7 @@ public class GameManager : MonoBehaviour
                 }
             }
 
+            // Aplica apenas a aura e os efeitos visuais, mantendo o modelo atual
             targetAuraManager.SetAura(bestIncomingElement);
 
             if (ReactionTrigger.Instance != null)
@@ -116,11 +135,11 @@ public class GameManager : MonoBehaviour
                 ReactionTrigger.Instance.TriggerReactionVFX(bestReaction, targetSlimeObject.transform.position, Quaternion.identity);
             }
 
-            Debug.Log($"[GameManager - Lógica Ótima] Slime com {currentElement} + {bestIncomingElement} = {bestReaction} (Score: {maxEvaluation}).");
+            Debug.Log($"[BFS] {currentElement} + {bestIncomingElement} = {bestReaction} (Score: {maxEvaluation}).");
         }
         else
         {
-            Debug.Log("[GameManager] Slime chegou na Máquina 2 sem elemento. Nenhuma reação para acionar.");
+            Debug.Log("[BFS] Sem elemento para reação.");
         }
     }
 
@@ -135,9 +154,8 @@ public class GameManager : MonoBehaviour
         }
     }
 
-    private void ResumeSlimeMovement()
+    public void ResumeSlimeMovement()
     {
         canSlimeMove = true;
-        Debug.Log("[GameManager] Movimento do slime retomado (canSlimeMove = true).");
     }
 }
