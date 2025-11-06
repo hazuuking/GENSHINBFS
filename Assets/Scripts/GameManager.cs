@@ -56,8 +56,12 @@ public class GameManager : MonoBehaviour
     {
         if (targetAuraManager == null) return;
 
-        targetAuraManager.SetAura(selectedElement);
+        // Libera o movimento IMEDIATAMENTE antes de qualquer outra operação
         ResumeSlimeMovement();
+        
+        // Depois aplica o elemento/aura
+        targetAuraManager.SetAura(selectedElement);
+        
         Debug.Log("[GameManager] Slime liberado.");
     }
 
@@ -157,5 +161,12 @@ public class GameManager : MonoBehaviour
     public void ResumeSlimeMovement()
     {
         canSlimeMove = true;
+        
+        // Força atualização física imediata
+        if (slimeRigidbody != null)
+        {
+            Physics.SyncTransforms();
+            slimeRigidbody.WakeUp();
+        }
     }
 }

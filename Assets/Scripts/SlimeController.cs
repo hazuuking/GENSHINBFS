@@ -77,13 +77,12 @@ public class SlimeController : MonoBehaviour
     /// </summary>
     void Update()
     {
-        // Correção de Estabilidade: Quando o Slime está na esteira, sua velocidade vertical (eixo Y)
-        // deve ser zerada se for negativa (caindo), para evitar que ele afunde na esteira
-        // devido a imprecisões do motor de física.
-        if (onEsteira && rb.velocity.y <= 0)
+        // Correção de Estabilidade: Suaviza a velocidade vertical apenas quando necessário
+        // para evitar interferir com o movimento natural da esteira
+        if (onEsteira && rb.velocity.y < -0.1f)
         {
-            // Mantém as velocidades horizontais (X e Z) e zera a vertical (Y).
-            rb.velocity = new Vector3(rb.velocity.x, 0, rb.velocity.z);
+            // Suaviza a velocidade vertical negativa em vez de zerar completamente
+            rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y * 0.9f, rb.velocity.z);
         }
     }
 
@@ -97,8 +96,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = true;
-            // Congela a posição Y enquanto estiver sobre a esteira para evitar saltos
-            rb.constraints |= RigidbodyConstraints.FreezePositionY;
+            // Remove o congelamento de Y para permitir movimento natural da esteira
+            // rb.constraints |= RigidbodyConstraints.FreezePositionY;
             Debug.Log("[SlimeController] Slime pousou na esteira!");
         }
     }
@@ -113,8 +112,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = false;
-            // Libera a posição Y quando sair da esteira
-            rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
+            // Não precisa mais liberar Y pois não congelamos mais
+            // rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
             Debug.Log("[SlimeController] Slime saiu da esteira!");
         }
     }
