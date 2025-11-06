@@ -87,9 +87,6 @@ public class SlimeController : MonoBehaviour
             rb.velocity = new Vector3(rb.velocity.x, rb.velocity.y * 0.9f, rb.velocity.z);
         }
     }
-=======
-
->>>>>>> 90e94c03446df957929b35bd1ff85042e677564b
 
     /// <summary>
     /// <c>OnCollisionEnter()</c>: Chamado quando o Slime entra em contato com outro Collider sólido.
@@ -101,12 +98,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = true;
-<<<<<<< HEAD
             // Remove o congelamento de Y para permitir movimento natural da esteira
             // rb.constraints |= RigidbodyConstraints.FreezePositionY;
-=======
-
->>>>>>> 90e94c03446df957929b35bd1ff85042e677564b
             Debug.Log("[SlimeController] Slime pousou na esteira!");
         }
     }
@@ -121,12 +114,8 @@ public class SlimeController : MonoBehaviour
         if (collision.gameObject.CompareTag("Esteira"))
         {
             onEsteira = false;
-<<<<<<< HEAD
             // Não precisa mais liberar Y pois não congelamos mais
             // rb.constraints &= ~RigidbodyConstraints.FreezePositionY;
-=======
-
->>>>>>> 90e94c03446df957929b35bd1ff85042e677564b
             Debug.Log("[SlimeController] Slime saiu da esteira!");
         }
     }
