@@ -224,6 +224,7 @@ MonoBehaviour:
   - elementType: 7
     slimeModelPrefab: {fileID: 8407657176283071827, guid: 4bfc3b780c52c874c8d371b6b2eb7944, type: 3}
   auraManager: {fileID: 362178543}
+  allowModelChange: 1
 --- !u!114 &362178543
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -444,7 +445,7 @@ Transform:
   m_GameObject: {fileID: 858715605}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 1.23, y: 2.45, z: -0.092999935}
+  m_LocalPosition: {x: 1.81, y: 2.45, z: -0.092999935}
   m_LocalScale: {x: 0.1, y: 2, z: 2}
   m_ConstrainProportionsScale: 0
   m_Children: []
