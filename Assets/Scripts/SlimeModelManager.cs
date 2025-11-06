@@ -22,6 +22,9 @@ public class SlimeModelManager : MonoBehaviour
     private GameObject currentSlimeModelInstance;
     private ElementType lastElement = ElementType.None;
     private ElementType lastStatus = ElementType.None;
+    
+    // Flag para controlar se devemos mudar o modelo (false na segunda máquina)
+    public bool allowModelChange = true;
 
     void Start()
     {
@@ -56,6 +59,12 @@ public class SlimeModelManager : MonoBehaviour
     /// </summary>
     private void UpdateSlimeModel(ElementType element, ElementType status)
     {
+        // Se não permitir mudança de modelo, apenas retorna
+        if (!allowModelChange)
+        {
+            return;
+        }
+
         // Destroi o modelo atual (se existir)
         if (currentSlimeModelInstance != null)
         {
@@ -83,7 +92,7 @@ public class SlimeModelManager : MonoBehaviour
         }
         else
         {
-            Debug.LogWarning($"[SlimeModelManager] Nenhum prefab encontrado para {toShow} nem fallback 'None'.");
+            // Silenciosamente continua - não loga warning
         }
     }
 
@@ -104,8 +113,9 @@ public class SlimeModelManager : MonoBehaviour
         UpdateSlimeModel(selectedElement, ElementType.None);
         lastElement = selectedElement;
         lastStatus = ElementType.None;
-        Debug.Log($"[SlimeModelManager] Modelo alterado para {selectedElement}");
     }
 
     
 }
+
+

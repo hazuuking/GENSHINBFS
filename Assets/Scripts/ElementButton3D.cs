@@ -40,9 +40,6 @@ public class ElementButton3D : MonoBehaviour
             // A conversão para (int) é usada para garantir que o enum seja passado corretamente, embora
             // a sobrecarga de OnElementButtonClicked aceite diretamente ElementType na implementação ideal.
             gameManager.OnElementButtonClicked(elementType);
-            
-            // Log para fins de depuração e rastreamento de eventos.
-            Debug.Log($"[ElementButton3D] Botão {elementType} clicado. Elemento enviado ao GameManager para aplicação no Slime.");
         }
         else
         {
